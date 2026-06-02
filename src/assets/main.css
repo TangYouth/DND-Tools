@@ -322,6 +322,28 @@ h1 {
   box-shadow: 0 16px 44px rgba(68, 45, 20, 0.08);
 }
 
+.empty-board-panel {
+  display: grid;
+  min-height: 360px;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.empty-board-panel h1 {
+  margin: 0;
+  font-size: 42px;
+}
+
+.empty-board-panel p:last-child {
+  max-width: 460px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.7;
+}
+
 .section-title {
   display: flex;
   align-items: center;

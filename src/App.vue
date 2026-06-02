@@ -3,7 +3,8 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useCharacters } from './composables/useCharacters'
 
 const router = useRouter()
-const { characters, selectedCharacter, selectCharacter, resetCreationDraft } = useCharacters()
+const { characters, selectedCharacter, storageLocationLabel, selectCharacter, resetCreationDraft, chooseStorageFile, importCharactersFromFile } =
+  useCharacters()
 
 const openCharacter = (id: string) => {
   selectCharacter(id)
@@ -38,7 +39,7 @@ const createCharacter = () => {
           v-for="character in characters"
           :key="character.id"
           class="character-row"
-          :class="{ active: character.id === selectedCharacter.id }"
+          :class="{ active: character.id === selectedCharacter?.id }"
           type="button"
           @click="openCharacter(character.id)"
         >
@@ -52,8 +53,8 @@ const createCharacter = () => {
       </div>
 
       <div class="sidebar-footer">
-        <button type="button">导入角色</button>
-        <button type="button">存储路径</button>
+        <button type="button" @click="importCharactersFromFile">导入角色</button>
+        <button type="button" :title="storageLocationLabel" @click="chooseStorageFile">存储路径</button>
       </div>
     </aside>
 

@@ -1,6 +1,51 @@
 import { computed, reactive, ref, watch } from 'vue'
 import characterCreationConfig from '../config/characterCreation.json'
 
+declare global {
+  interface Window {
+    showDirectoryPicker?: (options?: { mode?: FileSystemPermissionMode }) => Promise<FileSystemDirectoryHandle>
+    showOpenFilePicker?: (options?: {
+      multiple?: boolean
+      types?: Array<{
+        description?: string
+        accept: Record<string, string[]>
+      }>
+    }) => Promise<FileSystemFileHandle[]>
+    showSaveFilePicker?: (options?: {
+      suggestedName?: string
+      types?: Array<{
+        description?: string
+        accept: Record<string, string[]>
+      }>
+    }) => Promise<FileSystemFileHandle>
+  }
+}
+
+type FileSystemPermissionMode = 'read' | 'readwrite'
+
+interface FileSystemHandle {
+  kind: 'file' | 'directory'
+  name: string
+  queryPermission?: (descriptor?: { mode: FileSystemPermissionMode }) => Promise<PermissionState>
+  requestPermission?: (descriptor?: { mode: FileSystemPermissionMode }) => Promise<PermissionState>
+}
+
+interface FileSystemFileHandle extends FileSystemHandle {
+  kind: 'file'
+  getFile: () => Promise<File>
+  createWritable: () => Promise<{
+    write: (data: string) => Promise<void>
+    close: () => Promise<void>
+  }>
+}
+
+interface FileSystemDirectoryHandle extends FileSystemHandle {
+  kind: 'directory'
+  values: () => AsyncIterable<FileSystemFileHandle | FileSystemDirectoryHandle>
+  getFileHandle: (name: string, options?: { create?: boolean }) => Promise<FileSystemFileHandle>
+  removeEntry: (name: string) => Promise<void>
+}
+
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 type AbilityMode = 'manual' | 'random'
 type AbilityBonusKey = AbilityKey | ''
@@ -87,6 +132,9 @@ interface AbilityRoll {
 }
 
 const STORAGE_KEY = 'dnd-tools.character-board.v1'
+const STORAGE_DB_NAME = 'dnd-tools.storage'
+const STORAGE_DB_STORE = 'settings'
+const STORAGE_HANDLE_KEY = 'charactersDirectoryHandle'
 const CUSTOM_OPTION = characterCreationConfig.customOption
 const abilityDefinitions: Array<{ key: AbilityKey; label: string; short: string }> = [
   { key: 'str', label: '力量', short: 'STR' },
@@ -153,80 +201,77 @@ const createDefaultSkillSelection = () => {
 
 const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   id: crypto.randomUUID(),
-  name: '艾瑞克·晨星',
-  race: '半精灵',
-  className: '游侠',
-  level: 5,
-  background: '流浪者',
+  name: '未命名角色',
+  race: '人类',
+  className: '野蛮人',
+  level: 1,
+  background: '侍僧',
   alignment: '中立善良',
   size: '中型',
-  hp: { current: 38, max: 38 },
-  ac: 17,
-  initiative: 4,
+  hp: { current: 8, max: 8 },
+  ac: 10,
+  initiative: 0,
   speed: 30,
-  proficiency: 3,
-  passivePerception: 15,
-  attackBonus: 7,
-  spellSaveDc: 14,
-  story:
-    '艾瑞克自幼在边境的薄雾林地长大，那里静谧而危机四伏。他跟随森林中的猎手学习追踪与生存，学会了在无声中观察、在阴影中等待。随着年岁增长，他开始独自踏入更远的荒野，追踪威胁商路与村落的怪物，保护来往的商队与无辜的旅人。',
+  proficiency: 2,
+  passivePerception: 10,
+  attackBonus: 2,
+  spellSaveDc: 12,
+  story: '',
   abilities: [
     {
       key: 'str',
       label: '力量',
       short: 'STR',
-      score: 14,
-      save: 2,
-      skills: [{ name: '运动', value: 2 }],
+      score: 10,
+      save: 0,
+      skills: [{ name: '运动', value: 0 }],
     },
     {
       key: 'dex',
       label: '敏捷',
       short: 'DEX',
-      score: 18,
-      save: 7,
-      proficient: true,
+      score: 10,
+      save: 0,
       skills: [
-        { name: '杂技', value: 4 },
-        { name: '巧手', value: 4 },
-        { name: '潜行', value: 7, proficient: true },
+        { name: '杂技', value: 0 },
+        { name: '巧手', value: 0 },
+        { name: '隐匿', value: 0 },
       ],
     },
     {
       key: 'con',
       label: '体质',
       short: 'CON',
-      score: 15,
-      save: 2,
+      score: 10,
+      save: 0,
       skills: [],
     },
     {
       key: 'int',
       label: '智力',
       short: 'INT',
-      score: 12,
-      save: 1,
+      score: 10,
+      save: 0,
       skills: [
-        { name: '奥秘', value: 1 },
-        { name: '历史', value: 1 },
-        { name: '调查', value: 1 },
-        { name: '自然', value: 1 },
-        { name: '宗教', value: 1 },
+        { name: '奥秘', value: 0 },
+        { name: '历史', value: 0 },
+        { name: '调查', value: 0 },
+        { name: '自然', value: 0 },
+        { name: '宗教', value: 0 },
       ],
     },
     {
       key: 'wis',
       label: '感知',
       short: 'WIS',
-      score: 16,
-      save: 6,
-      proficient: true,
+      score: 10,
+      save: 0,
       skills: [
-        { name: '驯兽', value: 3 },
-        { name: '洞悉', value: 3 },
-        { name: '医药', value: 3 },
-        { name: '察觉', value: 6, proficient: true },
-        { name: '求生', value: 6, proficient: true },
+        { name: '驯兽', value: 0 },
+        { name: '洞悉', value: 0 },
+        { name: '医药', value: 0 },
+        { name: '察觉', value: 0 },
+        { name: '求生', value: 0 },
       ],
     },
     {
@@ -244,68 +289,30 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
     },
   ],
   proficiencies: {
-    weapons: '简单武器，军用武器，长弓，短弓，长剑，短剑，短弯刀',
-    armor: '轻甲，中甲，盾牌',
-    tools: '盗贼工具，乐器任选一种，导航工具，伪装工具',
-    other: '语言：通用语，精灵语，德鲁伊语，地底通用语',
+    weapons: '',
+    armor: '',
+    tools: '',
+    other: '',
   },
-  notes: '下一次长休后检查箭矢、口粮与治疗药水。',
+  notes: '',
   updatedAt: new Date().toISOString(),
   ...overrides,
 })
 
-const fallbackCharacters = [
-  createCharacter(),
-  createCharacter({
-    id: crypto.randomUUID(),
-    name: '莉亚娜',
-    className: '法师',
-    race: '人类',
-    level: 3,
-    hp: { current: 18, max: 22 },
-    ac: 12,
-    initiative: 2,
-    attackBonus: 5,
-    spellSaveDc: 13,
-    background: '贤者',
-    story: '莉亚娜把每一次冒险都当作一段需要被校订的传说。她记录星象、遗迹铭文与队友不愿承认的英勇瞬间。',
-  }),
-  createCharacter({
-    id: crypto.randomUUID(),
-    name: '布鲁诺',
-    className: '战士',
-    race: '矮人',
-    level: 4,
-    hp: { current: 42, max: 42 },
-    ac: 18,
-    initiative: 1,
-    speed: 25,
-    attackBonus: 6,
-    spellSaveDc: 0,
-    background: '士兵',
-    story: '布鲁诺记得每一处战场的泥土味，也记得每一个需要他站在前面的朋友。',
-  }),
-]
-
-const loadCharacters = (): Character[] => {
-  const saved = window.localStorage.getItem(STORAGE_KEY)
-  if (!saved) return fallbackCharacters
-
-  try {
-    const parsed = JSON.parse(saved) as Character[]
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : fallbackCharacters
-  } catch {
-    return fallbackCharacters
-  }
-}
+const loadCachedCharacters = (): Character[] => []
 
 const cloneCharacter = (character: Character): Character => JSON.parse(JSON.stringify(character)) as Character
 
-const characters = ref<Character[]>(loadCharacters())
+const characters = ref<Character[]>(loadCachedCharacters())
 const selectedId = ref(characters.value[0]?.id ?? '')
 const isEditing = ref(false)
 const creationStep = ref(0)
 const importInput = ref<HTMLInputElement | null>(null)
+const storageDirectoryHandle = ref<FileSystemDirectoryHandle | null>(null)
+const storageLocationLabel = ref('未选择本机存储目录')
+const storageStatus = ref('可点击“存储路径”选择本机角色目录')
+const isStorageReady = ref(false)
+const isWritingStorage = ref(false)
 const creationDraft = reactive<CharacterDraft>({
   name: characterCreationConfig.defaults.name,
   species: characterCreationConfig.defaults.species,
@@ -328,33 +335,160 @@ const creationDraft = reactive<CharacterDraft>({
 })
 const abilityRolls = ref<AbilityRoll[]>([])
 
-const selectedCharacter = computed<Character>(() => {
-  const character = characters.value.find((item) => item.id === selectedId.value) ?? characters.value[0]
-  if (character) return character
-
-  const fallback = createCharacter()
-  characters.value = [fallback]
-  selectedId.value = fallback.id
-  return fallback
+const selectedCharacter = computed<Character | null>(() => {
+  return characters.value.find((item) => item.id === selectedId.value) ?? characters.value[0] ?? null
 })
 
-const form = reactive<Character>(cloneCharacter(selectedCharacter.value))
+const form = reactive<Character>(cloneCharacter(selectedCharacter.value ?? createCharacter()))
 
 const hpPercent = computed(() => {
-  if (!selectedCharacter.value.hp.max) return 0
+  if (!selectedCharacter.value?.hp.max) return 0
   return Math.min(100, Math.max(0, (selectedCharacter.value.hp.current / selectedCharacter.value.hp.max) * 100))
 })
 
 const syncForm = () => {
+  if (!selectedCharacter.value) return
   Object.assign(form, cloneCharacter(selectedCharacter.value))
 }
 
 watch(selectedCharacter, syncForm)
 
+const openStorageDb = () => {
+  return new Promise<IDBDatabase>((resolve, reject) => {
+    const request = indexedDB.open(STORAGE_DB_NAME, 1)
+
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(STORAGE_DB_STORE)
+    }
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => reject(request.error)
+  })
+}
+
+const readStorageSetting = async <T>(key: string): Promise<T | undefined> => {
+  const db = await openStorageDb()
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(STORAGE_DB_STORE, 'readonly')
+    const request = transaction.objectStore(STORAGE_DB_STORE).get(key)
+
+    request.onsuccess = () => resolve(request.result as T | undefined)
+    request.onerror = () => reject(request.error)
+    transaction.oncomplete = () => db.close()
+  })
+}
+
+const writeStorageSetting = async (key: string, value: unknown) => {
+  const db = await openStorageDb()
+  return new Promise<void>((resolve, reject) => {
+    const transaction = db.transaction(STORAGE_DB_STORE, 'readwrite')
+    const request = transaction.objectStore(STORAGE_DB_STORE).put(value, key)
+
+    request.onsuccess = () => resolve()
+    request.onerror = () => reject(request.error)
+    transaction.oncomplete = () => db.close()
+  })
+}
+
+const canUseLocalFileStorage = () => Boolean(window.showOpenFilePicker && window.showDirectoryPicker)
+
+const requestFilePermission = async (handle: FileSystemHandle, mode: FileSystemPermissionMode) => {
+  if (!handle.queryPermission || !handle.requestPermission) return true
+  const currentPermission = await handle.queryPermission({ mode })
+  if (currentPermission === 'granted') return true
+  const requestedPermission = await handle.requestPermission({ mode })
+  return requestedPermission === 'granted'
+}
+
+const parseCharactersJson = (text: string): Character[] => {
+  const parsed = JSON.parse(text) as Character[] | Character
+  const importedCharacters = Array.isArray(parsed) ? parsed : [parsed]
+
+  return importedCharacters
+    .filter((character): character is Character => Boolean(character && typeof character === 'object' && character.name))
+    .map((character) => ({
+      ...character,
+      id: character.id || crypto.randomUUID(),
+      updatedAt: character.updatedAt || new Date().toISOString(),
+    }))
+}
+
+const getCharacterFileName = (character: Pick<Character, 'id'>) => `${character.id}.json`
+
+const writeCharacterFile = async (character: Character) => {
+  if (!storageDirectoryHandle.value) return
+  const handle = await storageDirectoryHandle.value.getFileHandle(getCharacterFileName(character), { create: true })
+  const writable = await handle.createWritable()
+  await writable.write(JSON.stringify(character, null, 2))
+  await writable.close()
+}
+
+const persistCharacters = async () => {
+  window.localStorage.removeItem(STORAGE_KEY)
+
+  if (!storageDirectoryHandle.value || isWritingStorage.value) return
+
+  try {
+    isWritingStorage.value = true
+    const canWrite = await requestFilePermission(storageDirectoryHandle.value, 'readwrite')
+    if (!canWrite) {
+      storageStatus.value = '没有本机目录写入权限'
+      return
+    }
+
+    await Promise.all(characters.value.map((character) => writeCharacterFile(character)))
+    storageStatus.value = `已保存到 ${storageDirectoryHandle.value.name}`
+  } catch {
+    storageStatus.value = '保存到本机目录失败'
+  } finally {
+    isWritingStorage.value = false
+  }
+}
+
+const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle) => {
+  const canRead = await requestFilePermission(handle, 'read')
+  if (!canRead) return false
+
+  const parsedCharacters: Character[] = []
+  for await (const entry of handle.values()) {
+    if (entry.kind !== 'file' || !entry.name.endsWith('.json')) continue
+    const file = await entry.getFile()
+    const text = await file.text()
+    if (!text.trim()) continue
+    parsedCharacters.push(...parseCharactersJson(text))
+  }
+
+  const uniqueCharacters = Array.from(new Map(parsedCharacters.map((character) => [character.id, character])).values())
+
+  storageDirectoryHandle.value = handle
+  storageLocationLabel.value = handle.name
+  storageStatus.value =
+    uniqueCharacters.length > 0 ? `已从 ${handle.name} 读取 ${uniqueCharacters.length} 个角色` : `已连接 ${handle.name}，当前没有角色`
+  characters.value = uniqueCharacters
+  selectedId.value = uniqueCharacters[0]?.id ?? ''
+  return true
+}
+
+const initializeCharacterStorage = async () => {
+  try {
+    window.localStorage.removeItem(STORAGE_KEY)
+    const savedHandle = await readStorageSetting<FileSystemDirectoryHandle>(STORAGE_HANDLE_KEY)
+    if (savedHandle) {
+      await loadCharactersFromDirectory(savedHandle)
+    }
+  } catch {
+    storageStatus.value = '读取本机存储设置失败'
+  } finally {
+    isStorageReady.value = true
+  }
+}
+
+void initializeCharacterStorage()
+
 watch(
   characters,
-  (next) => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next, null, 2))
+  () => {
+    if (!isStorageReady.value) return
+    void persistCharacters()
   },
   { deep: true },
 )
@@ -382,10 +516,93 @@ const saveForm = () => {
 }
 
 const deleteCharacter = () => {
-  if (characters.value.length <= 1 || !selectedCharacter.value) return
-  characters.value = characters.value.filter((character) => character.id !== selectedCharacter.value.id)
+  if (!selectedCharacter.value) return
+  const deletedCharacterId = selectedCharacter.value.id
+  characters.value = characters.value.filter((character) => character.id !== deletedCharacterId)
   selectedId.value = characters.value[0]?.id ?? ''
   isEditing.value = false
+  if (storageDirectoryHandle.value) {
+    void storageDirectoryHandle.value.removeEntry(`${deletedCharacterId}.json`).catch(() => undefined)
+  }
+}
+
+const mergeImportedCharacters = (importedCharacters: Character[]) => {
+  if (importedCharacters.length === 0) return []
+
+  const existingIds = new Set(characters.value.map((character) => character.id))
+  const normalizedCharacters = importedCharacters.map((character) => {
+    const id = existingIds.has(character.id) ? crypto.randomUUID() : character.id
+    existingIds.add(id)
+    return {
+      ...character,
+      id,
+      updatedAt: character.updatedAt || new Date().toISOString(),
+    }
+  })
+
+  characters.value = [...normalizedCharacters, ...characters.value]
+  selectedId.value = normalizedCharacters[0]?.id ?? ''
+  isEditing.value = false
+  return normalizedCharacters
+}
+
+const chooseStorageFile = async () => {
+  if (!window.showDirectoryPicker) {
+    storageStatus.value = '当前浏览器不支持选择本机存储目录'
+    return
+  }
+
+  try {
+    const handle = await window.showDirectoryPicker({ mode: 'readwrite' })
+    const currentCharacters = [...characters.value]
+    const currentSelectedId = selectedId.value
+    storageDirectoryHandle.value = handle
+    storageLocationLabel.value = handle.name
+    await writeStorageSetting(STORAGE_HANDLE_KEY, handle)
+    const loaded = await loadCharactersFromDirectory(handle)
+    if ((!loaded || characters.value.length === 0) && currentCharacters.length > 0) {
+      characters.value = currentCharacters
+      selectedId.value = currentSelectedId || currentCharacters[0]?.id || ''
+      await persistCharacters()
+    }
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return
+    storageStatus.value = '选择本机存储目录失败'
+  }
+}
+
+const importCharactersFromFile = async () => {
+  if (!window.showOpenFilePicker) {
+    storageStatus.value = '当前浏览器不支持从本机文件导入'
+    return
+  }
+
+  try {
+    const [handle] = await window.showOpenFilePicker({
+      multiple: false,
+      types: [
+        {
+          description: 'DND 角色 JSON',
+          accept: { 'application/json': ['.json'] },
+        },
+      ],
+    })
+    if (!handle) return
+
+    const canRead = await requestFilePermission(handle, 'read')
+    if (!canRead) {
+      storageStatus.value = '没有读取导入文件的权限'
+      return
+    }
+
+    const file = await handle.getFile()
+    const importedCharacters = parseCharactersJson(await file.text())
+    mergeImportedCharacters(importedCharacters)
+    storageStatus.value = `已导入 ${importedCharacters.length} 个角色`
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') return
+    storageStatus.value = '导入角色失败，请确认 JSON 格式'
+  }
 }
 
 const exportJson = () => {
@@ -407,37 +624,31 @@ const importJson = async (event: Event) => {
   const text = await file.text()
   let parsed: Character[]
   try {
-    parsed = JSON.parse(text) as Character[]
+    parsed = parseCharactersJson(text)
   } catch {
     return
   }
-  if (!Array.isArray(parsed) || parsed.length === 0) return
 
-  const firstCharacter = parsed[0]
-  if (!firstCharacter?.id) return
-
-  characters.value = parsed
-  selectedId.value = firstCharacter.id
-  isEditing.value = false
+  mergeImportedCharacters(parsed)
   target.value = ''
 }
 
 const metricCards = computed(() => [
-  { label: 'HP', value: `${selectedCharacter.value.hp.current} / ${selectedCharacter.value.hp.max}`, tone: 'green' },
-  { label: 'AC', value: selectedCharacter.value.ac, tone: 'steel' },
-  { label: '先攻', value: signed(selectedCharacter.value.initiative), tone: 'violet' },
-  { label: '速度', value: `${selectedCharacter.value.speed} 尺`, tone: 'amber' },
-  { label: '熟练加值', value: signed(selectedCharacter.value.proficiency), tone: 'amber' },
-  { label: '被动察觉', value: selectedCharacter.value.passivePerception, tone: 'blue' },
-  { label: '攻击加值', value: signed(selectedCharacter.value.attackBonus), tone: 'bronze' },
-  { label: '法术豁免', value: selectedCharacter.value.spellSaveDc || '-', tone: 'violet' },
+  { label: 'HP', value: `${selectedCharacter.value?.hp.current ?? 0} / ${selectedCharacter.value?.hp.max ?? 0}`, tone: 'green' },
+  { label: 'AC', value: selectedCharacter.value?.ac ?? '-', tone: 'steel' },
+  { label: '先攻', value: signed(selectedCharacter.value?.initiative ?? 0), tone: 'violet' },
+  { label: '速度', value: `${selectedCharacter.value?.speed ?? 0} 尺`, tone: 'amber' },
+  { label: '熟练加值', value: signed(selectedCharacter.value?.proficiency ?? 0), tone: 'amber' },
+  { label: '被动察觉', value: selectedCharacter.value?.passivePerception ?? '-', tone: 'blue' },
+  { label: '攻击加值', value: signed(selectedCharacter.value?.attackBonus ?? 0), tone: 'bronze' },
+  { label: '法术豁免', value: selectedCharacter.value?.spellSaveDc || '-', tone: 'violet' },
 ])
 
 const proficiencyRows = computed(() => [
-  ['武器熟练项', selectedCharacter.value.proficiencies.weapons],
-  ['护甲熟练项', selectedCharacter.value.proficiencies.armor],
-  ['工具熟练项', selectedCharacter.value.proficiencies.tools],
-  ['其他熟练项', selectedCharacter.value.proficiencies.other],
+  ['武器熟练项', selectedCharacter.value?.proficiencies.weapons ?? ''],
+  ['护甲熟练项', selectedCharacter.value?.proficiencies.armor ?? ''],
+  ['工具熟练项', selectedCharacter.value?.proficiencies.tools ?? ''],
+  ['其他熟练项', selectedCharacter.value?.proficiencies.other ?? ''],
 ])
 
 const currentCreationStep = computed(() => characterCreationConfig.steps[creationStep.value])
@@ -746,6 +957,8 @@ export const useCharacters = () => ({
   isEditing,
   creationStep,
   importInput,
+  storageLocationLabel,
+  storageStatus,
   creationDraft,
   abilityRolls,
   hpPercent,
@@ -772,6 +985,8 @@ export const useCharacters = () => ({
   addCharacter,
   saveForm,
   deleteCharacter,
+  chooseStorageFile,
+  importCharactersFromFile,
   exportJson,
   importJson,
   resolveCustomValue,

@@ -6,7 +6,6 @@ const {
   selectedCharacter,
   form,
   isEditing,
-  importInput,
   hpPercent,
   metricCards,
   proficiencyRows,
@@ -15,22 +14,24 @@ const {
   signed,
   saveForm,
   deleteCharacter,
-  exportJson,
-  importJson,
 } = useCharacters()
 </script>
 
 <template>
+  <section v-if="!selectedCharacter" class="panel empty-board-panel">
+    <p class="eyebrow">人物看板</p>
+    <h1>暂无角色</h1>
+    <p>可以从左侧新建角色，或导入一个角色 JSON 文件。</p>
+  </section>
+
+  <template v-else>
   <header class="topbar">
 <div>
   <p class="eyebrow">人物看板</p>
   <h1>{{ selectedCharacter.name }}</h1>
 </div>
 <div class="topbar-actions">
-  <button class="plain-button" type="button" @click="importInput?.click()">导入 JSON</button>
-  <button class="plain-button" type="button" @click="exportJson">导出 JSON</button>
   <button class="primary-button" type="button" @click="isEditing = true">编辑</button>
-  <input ref="importInput" class="hidden-input" type="file" accept="application/json" @change="importJson" />
 </div>
   </header>
 
@@ -249,7 +250,7 @@ const {
 </label>
 
 <footer>
-  <button class="danger-button" type="button" :disabled="characters.length <= 1" @click="deleteCharacter">
+  <button class="danger-button" type="button" :disabled="characters.length === 0" @click="deleteCharacter">
     删除角色
   </button>
   <span></span>
@@ -258,4 +259,5 @@ const {
 </footer>
   </form>
 </div>
+  </template>
 </template>
