@@ -3,6 +3,7 @@ import characterCreationConfig from '../config/characterCreation.json'
 
 type AbilityKey = 'str' | 'dex' | 'con' | 'int' | 'wis' | 'cha'
 type AbilityMode = 'manual' | 'random'
+type AbilityBonusKey = AbilityKey | ''
 
 interface Skill {
   name: string
@@ -68,6 +69,10 @@ interface CharacterDraft {
   abilityMode: AbilityMode
   abilityScores: Record<AbilityKey, number>
   abilityAssignments: Record<AbilityKey, string>
+  abilityBonuses: {
+    plus2: AbilityBonusKey
+    plus1: AbilityBonusKey
+  }
 }
 
 interface AbilityRoll {
@@ -105,6 +110,11 @@ const createDefaultAbilityAssignments = (): Record<AbilityKey, string> => ({
   int: '',
   wis: '',
   cha: '',
+})
+
+const createDefaultAbilityBonuses = (): CharacterDraft['abilityBonuses'] => ({
+  plus2: '',
+  plus1: '',
 })
 
 const createCharacter = (overrides: Partial<Character> = {}): Character => ({
@@ -278,6 +288,7 @@ const creationDraft = reactive<CharacterDraft>({
   abilityMode: 'random',
   abilityScores: createDefaultAbilityScores(),
   abilityAssignments: createDefaultAbilityAssignments(),
+  abilityBonuses: createDefaultAbilityBonuses(),
 })
 const abilityRolls = ref<AbilityRoll[]>([])
 
@@ -421,12 +432,23 @@ const sortedRolls = computed(() => {
 
 const usedRollIds = computed(() => Object.values(creationDraft.abilityAssignments).filter(Boolean))
 
+const getAbilityBonus = (key: AbilityKey) => {
+  if (creationDraft.abilityBonuses.plus2 === key) return 2
+  if (creationDraft.abilityBonuses.plus1 === key) return 1
+  return 0
+}
+
+const getFinalAbilityScore = (key: AbilityKey) => {
+  return Math.min(30, creationDraft.abilityScores[key] + getAbilityBonus(key))
+}
+
 const abilityPreview = computed(() => {
   return abilityDefinitions.map((ability) => {
-    const score = creationDraft.abilityScores[ability.key]
+    const score = getFinalAbilityScore(ability.key)
     return {
       ...ability,
       score,
+      bonus: getAbilityBonus(ability.key),
       modifier: signed(modifier(score)),
     }
   })
@@ -478,6 +500,7 @@ const rollAbilityScores = () => {
 const resetAbilityScores = () => {
   Object.assign(creationDraft.abilityScores, createDefaultAbilityScores())
   Object.assign(creationDraft.abilityAssignments, createDefaultAbilityAssignments())
+  Object.assign(creationDraft.abilityBonuses, createDefaultAbilityBonuses())
   abilityRolls.value = []
 }
 
@@ -493,9 +516,18 @@ const assignRollToAbility = (key: AbilityKey, rollId: string) => {
   creationDraft.abilityScores[key] = roll?.total ?? 10
 }
 
+const setAbilityBonus = (bonusType: 'plus2' | 'plus1', key: AbilityKey, checked: boolean) => {
+  const otherBonusType = bonusType === 'plus2' ? 'plus1' : 'plus2'
+
+  creationDraft.abilityBonuses[bonusType] = checked ? key : ''
+  if (checked && creationDraft.abilityBonuses[otherBonusType] === key) {
+    creationDraft.abilityBonuses[otherBonusType] = ''
+  }
+}
+
 const createAbilitiesFromDraft = (): Ability[] => {
   return abilityDefinitions.map((ability) => {
-    const score = creationDraft.abilityScores[ability.key]
+    const score = getFinalAbilityScore(ability.key)
     const baseModifier = modifier(score)
 
     return {
@@ -525,6 +557,7 @@ const resetCreationDraft = () => {
   })
   Object.assign(creationDraft.abilityScores, createDefaultAbilityScores())
   Object.assign(creationDraft.abilityAssignments, createDefaultAbilityAssignments())
+  Object.assign(creationDraft.abilityBonuses, createDefaultAbilityBonuses())
   abilityRolls.value = []
 }
 
@@ -562,6 +595,14 @@ const finishCreation = () => {
     return
   }
 
+  const finalAbilityScores = abilityDefinitions.reduce(
+    (scores, ability) => {
+      scores[ability.key] = getFinalAbilityScore(ability.key)
+      return scores
+    },
+    {} as Record<AbilityKey, number>,
+  )
+
   const character = createCharacter({
     name: creationDraft.name.trim(),
     race: resolveCustomValue(creationDraft.species, creationDraft.customSpecies),
@@ -571,14 +612,14 @@ const finishCreation = () => {
     background: resolveCustomValue(creationDraft.background, creationDraft.customBackground),
     size: resolveCustomValue(creationDraft.size, creationDraft.customSize),
     story: creationDraft.story.trim() || '这个角色的背景故事还在旅途中慢慢成形。',
-    hp: { current: Math.max(1, 8 + modifier(creationDraft.abilityScores.con)), max: Math.max(1, 8 + modifier(creationDraft.abilityScores.con)) },
-    ac: 10 + modifier(creationDraft.abilityScores.dex),
-    initiative: modifier(creationDraft.abilityScores.dex),
+    hp: { current: Math.max(1, 8 + modifier(finalAbilityScores.con)), max: Math.max(1, 8 + modifier(finalAbilityScores.con)) },
+    ac: 10 + modifier(finalAbilityScores.dex),
+    initiative: modifier(finalAbilityScores.dex),
     speed: 30,
     proficiency: 2,
-    passivePerception: 10 + modifier(creationDraft.abilityScores.wis),
-    attackBonus: 2 + Math.max(modifier(creationDraft.abilityScores.str), modifier(creationDraft.abilityScores.dex)),
-    spellSaveDc: 10 + 2 + Math.max(modifier(creationDraft.abilityScores.int), modifier(creationDraft.abilityScores.wis), modifier(creationDraft.abilityScores.cha)),
+    passivePerception: 10 + modifier(finalAbilityScores.wis),
+    attackBonus: 2 + Math.max(modifier(finalAbilityScores.str), modifier(finalAbilityScores.dex)),
+    spellSaveDc: 10 + 2 + Math.max(modifier(finalAbilityScores.int), modifier(finalAbilityScores.wis), modifier(finalAbilityScores.cha)),
     abilities: createAbilitiesFromDraft(),
     notes: '角色创建流程已记录基本信息，后续步骤可继续完善。',
   })
@@ -628,6 +669,9 @@ export const useCharacters = () => ({
   resetAbilityScores,
   isRollOptionUsed,
   assignRollToAbility,
+  setAbilityBonus,
+  getAbilityBonus,
+  getFinalAbilityScore,
   resetCreationDraft,
   goNextCreationStep,
   goPreviousCreationStep,

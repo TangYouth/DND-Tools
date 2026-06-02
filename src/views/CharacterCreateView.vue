@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
 import backgroundIcon from '../components/icons/beijing.png'
@@ -7,10 +7,17 @@ import storyIcon from '../components/icons/beijinggushi.png'
 import levelIcon from '../components/icons/dengji.png'
 import basicInfoIcon from '../components/icons/jibenxinxi.png'
 import characterIcon from '../components/icons/juese.png'
+import perceptionIcon from '../components/icons/ganzhi.png'
 import sizeIcon from '../components/icons/tixing.png'
 import alignmentIcon from '../components/icons/zhenying.png'
 import classIcon from '../components/icons/zhiye.png'
+import abilityModeIcon from '../components/icons/shuxingshengcheng.png'
 import speciesIcon from '../components/icons/zhongzu.png'
+import strengthIcon from '../components/icons/liliang.png'
+import dexterityIcon from '../components/icons/minjie.png'
+import constitutionIcon from '../components/icons/tizhi.png'
+import intelligenceIcon from '../components/icons/zhili.png'
+import charismaIcon from '../components/icons/meili.png'
 
 const router = useRouter()
 const {
@@ -34,6 +41,8 @@ const {
   rollAbilityScores,
   isRollOptionUsed,
   assignRollToAbility,
+  setAbilityBonus,
+  getFinalAbilityScore,
   goNextCreationStep,
   goPreviousCreationStep,
   resetCreationDraft,
@@ -66,6 +75,79 @@ const previewIconMap: Record<string, string> = {
 }
 
 const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[label] : undefined)
+
+const abilityIconMap: Record<string, string> = {
+  str: strengthIcon,
+  dex: dexterityIcon,
+  con: constitutionIcon,
+  int: intelligenceIcon,
+  wis: perceptionIcon,
+  cha: charismaIcon,
+}
+
+const getAbilityIcon = (key: string) => abilityIconMap[key]
+
+const EXPECTED_ROLL_AVERAGE = 12.2446
+const ROLL_ANIMATION_DURATION = 1000
+const ROLL_ANIMATION_INTERVAL = 90
+
+const isRollingAbilities = ref(false)
+const animatedAbilityRolls = ref<
+  Array<{
+    id: string
+    dice: number[]
+    dropped: number
+    droppedIndex: number
+    total: number
+  }>
+>([])
+let rollAnimationTimer: ReturnType<typeof window.setInterval> | undefined
+let rollAnimationTimeout: ReturnType<typeof window.setTimeout> | undefined
+
+const rollD6ForAnimation = () => Math.floor(Math.random() * 6) + 1
+
+const createAnimatedRolls = () => {
+  animatedAbilityRolls.value = Array.from({ length: 6 }, (_, index) => {
+    const dice = Array.from({ length: 4 }, rollD6ForAnimation)
+    const dropped = Math.min(...dice)
+    const droppedIndex = dice.indexOf(dropped)
+    const total = dice.reduce((sum, die) => sum + die, 0) - dropped
+
+    return {
+      id: `rolling-${index}`,
+      dice,
+      dropped,
+      droppedIndex,
+      total,
+    }
+  })
+}
+
+const displayedAbilityRolls = computed(() => (isRollingAbilities.value ? animatedAbilityRolls.value : abilityRolls.value))
+const displayedRollTotal = computed(() => displayedAbilityRolls.value.reduce((sum, roll) => sum + roll.total, 0))
+const hasRollRows = computed(() => displayedAbilityRolls.value.length > 0)
+const rollExpectedTotal = computed(() => EXPECTED_ROLL_AVERAGE * 6)
+
+const startAbilityRollAnimation = () => {
+  if (isRollingAbilities.value) return
+
+  isRollingAbilities.value = true
+  createAnimatedRolls()
+  rollAnimationTimer = window.setInterval(createAnimatedRolls, ROLL_ANIMATION_INTERVAL)
+  rollAnimationTimeout = window.setTimeout(() => {
+    if (rollAnimationTimer) window.clearInterval(rollAnimationTimer)
+    rollAbilityScores()
+    isRollingAbilities.value = false
+    animatedAbilityRolls.value = []
+    rollAnimationTimer = undefined
+    rollAnimationTimeout = undefined
+  }, ROLL_ANIMATION_DURATION)
+}
+
+onUnmounted(() => {
+  if (rollAnimationTimer) window.clearInterval(rollAnimationTimer)
+  if (rollAnimationTimeout) window.clearTimeout(rollAnimationTimeout)
+})
 </script>
 
 <template>
@@ -246,7 +328,7 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
       <div class="ability-step-layout">
         <section class="ability-builder">
           <div class="creation-section-title">
-            <span>⚂</span>
+            <span class="title-icon-wrap"><img :src="abilityModeIcon" alt="" /></span>
             <h2>属性生成方式</h2>
           </div>
 
@@ -271,18 +353,20 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
             <p class="hint-box">投掷 4 个 d6，去掉最低点数，记录 3 个最高点数的总和。重复 6 次后，将结果分配给六项属性。</p>
 
             <div class="roll-actions">
-              <button class="primary-button" type="button" @click="rollAbilityScores">⚄ 开始投掷</button>
+              <button class="primary-button" type="button" :disabled="isRollingAbilities" @click="startAbilityRollAnimation">
+                {{ isRollingAbilities ? '⚄ 投掷中...' : '⚄ 开始投掷' }}
+              </button>
             </div>
 
-            <div class="roll-table">
+            <div class="roll-table" :class="{ rolling: isRollingAbilities }">
               <div class="roll-table-head">
                 <span>组别</span>
                 <span>四个 d6 投掷结果</span>
                 <span>去掉最低</span>
                 <span>结果</span>
               </div>
-              <div v-if="abilityRolls.length === 0" class="roll-empty">点击“开始投掷”生成 6 组属性数值。</div>
-              <div v-for="(roll, index) in abilityRolls" :key="roll.id" class="roll-table-row">
+              <div v-if="!hasRollRows" class="roll-empty">点击“开始投掷”生成 6 组属性数值。</div>
+              <div v-for="(roll, index) in displayedAbilityRolls" :key="roll.id" class="roll-table-row">
                 <span>第 {{ index + 1 }} 组</span>
                 <span class="dice-list">
                   <b
@@ -295,6 +379,11 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
                 </span>
                 <span>去掉 {{ roll.dropped }}</span>
                 <strong>{{ roll.total }}</strong>
+              </div>
+              <div v-if="hasRollRows" class="roll-summary-row">
+                <span>结果之和：{{ displayedRollTotal }}</span>
+                <span>平均期望：{{ EXPECTED_ROLL_AVERAGE.toFixed(2) }} / 组</span>
+                <span>六组期望：{{ rollExpectedTotal.toFixed(2) }}</span>
               </div>
             </div>
 
@@ -315,10 +404,16 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
               <div class="ability-assignment-head">
                 <span>属性</span>
                 <span>分配数值</span>
+                <span>+2</span>
+                <span>+1</span>
+                <span>最终</span>
                 <span>调整值</span>
               </div>
               <div v-for="ability in abilityDefinitions" :key="ability.key" class="ability-assignment-row">
-                <strong>{{ ability.label }}</strong>
+                <strong>
+                  <img :src="getAbilityIcon(ability.key)" alt="" />
+                  {{ ability.label }}
+                </strong>
                 <el-input-number
                   v-if="creationDraft.abilityMode === 'manual'"
                   v-model="creationDraft.abilityScores[ability.key]"
@@ -342,7 +437,18 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
                     :disabled="isRollOptionUsed(roll.id, ability.key)"
                   />
                 </el-select>
-                <span>{{ signed(modifier(creationDraft.abilityScores[ability.key])) }}</span>
+                <el-checkbox
+                  :model-value="creationDraft.abilityBonuses.plus2 === ability.key"
+                  :disabled="creationDraft.abilityBonuses.plus1 === ability.key"
+                  @change="setAbilityBonus('plus2', ability.key, Boolean($event))"
+                />
+                <el-checkbox
+                  :model-value="creationDraft.abilityBonuses.plus1 === ability.key"
+                  :disabled="creationDraft.abilityBonuses.plus2 === ability.key"
+                  @change="setAbilityBonus('plus1', ability.key, Boolean($event))"
+                />
+                <span>{{ getFinalAbilityScore(ability.key) }}</span>
+                <span>{{ signed(modifier(getFinalAbilityScore(ability.key))) }}</span>
               </div>
             </div>
           </div>
@@ -356,7 +462,10 @@ const getPreviewIcon = (label: string | undefined) => (label ? previewIconMap[la
             </div>
             <div class="ability-preview-list">
               <div v-for="ability in abilityPreview" :key="ability.key">
-                <strong>{{ ability.label }}</strong>
+                <strong>
+                  <img :src="getAbilityIcon(ability.key)" alt="" />
+                  {{ ability.label }}
+                </strong>
                 <span>{{ ability.score }}</span>
                 <em>{{ ability.modifier }}</em>
               </div>
