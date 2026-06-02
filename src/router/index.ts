@@ -1,0 +1,23 @@
+import { createRouter, createWebHistory } from 'vue-router'
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes: [
+    {
+      path: '/',
+      redirect: { name: 'characters' },
+    },
+    {
+      path: '/characters',
+      name: 'characters',
+      component: () => import('../views/CharacterBoardView.vue'),
+    },
+    {
+      path: '/characters/new',
+      name: 'character-create',
+      component: () => import('../views/CharacterCreateView.vue'),
+    },
+  ],
+})
+
+export default router

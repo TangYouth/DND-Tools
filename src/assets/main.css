@@ -112,9 +112,12 @@ button {
 }
 
 .tab {
+  display: grid;
   min-height: 42px;
+  place-items: center;
   color: rgba(255, 255, 255, 0.72);
   background: transparent;
+  text-decoration: none;
 }
 
 .tab.active {
@@ -727,6 +730,12 @@ h1 {
   font-weight: 700;
 }
 
+.creation-section-title .title-icon-wrap img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+}
+
 .creation-section-title h2 {
   margin: 0;
   font-size: 22px;
@@ -754,8 +763,12 @@ h1 {
 }
 
 .creation-form label > input,
+.creation-form label > .el-input,
+.creation-form label > .el-input-number,
+.creation-form label > .el-select,
 .creation-form label > select,
 .creation-form label > textarea,
+.creation-form label > .el-textarea,
 .story-field > span,
 .creation-form fieldset > .alignment-grid,
 .creation-form fieldset > .size-grid {
@@ -791,6 +804,10 @@ h1 {
   max-width: 110px;
 }
 
+.compact-field .el-input-number {
+  max-width: 140px;
+}
+
 .creation-form fieldset {
   border: 0;
   padding: 0;
@@ -811,6 +828,36 @@ textarea {
   padding: 10px 11px;
   color: var(--ink);
   background: rgba(255, 255, 255, 0.66);
+}
+
+.el-input,
+.el-select,
+.el-input-number,
+.el-textarea {
+  width: 100%;
+}
+
+.el-input__wrapper,
+.el-textarea__inner {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.66);
+  box-shadow: 0 0 0 1px var(--line) inset;
+}
+
+.el-input__wrapper.is-focus,
+.el-select .el-input.is-focus .el-input__wrapper,
+.el-textarea__inner:focus {
+  box-shadow: 0 0 0 1px var(--line-strong) inset;
+}
+
+.el-input__inner,
+.el-textarea__inner {
+  color: var(--ink);
+  font-family: inherit;
+}
+
+.el-input-number .el-input__inner {
+  text-align: left;
 }
 
 select {
@@ -1116,9 +1163,16 @@ select {
 }
 
 .ability-assignment-row input,
+.ability-assignment-row .el-input-number,
+.ability-assignment-row .el-select,
 .ability-assignment-row select {
   min-height: 36px;
   padding: 6px 9px;
+}
+
+.ability-assignment-row .el-input-number,
+.ability-assignment-row .el-select {
+  padding: 0;
 }
 
 .ability-assignment-row span {
@@ -1205,9 +1259,19 @@ select {
 }
 
 .preview-row strong {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   color: #4a3d30;
   font-size: 17px;
   font-weight: 700;
+}
+
+.preview-row strong img {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .preview-row span {
@@ -1389,8 +1453,12 @@ textarea {
   }
 
   .creation-form label > input,
+  .creation-form label > .el-input,
+  .creation-form label > .el-input-number,
+  .creation-form label > .el-select,
   .creation-form label > select,
   .creation-form label > textarea,
+  .creation-form label > .el-textarea,
   .story-field > span,
   .creation-form fieldset > .alignment-grid,
   .creation-form fieldset > .size-grid {
