@@ -9,6 +9,7 @@ interface Skill {
   name: string
   value: number
   proficient?: boolean
+  expertise?: boolean
 }
 
 interface Ability {
@@ -73,6 +74,8 @@ interface CharacterDraft {
     plus2: AbilityBonusKey
     plus1: AbilityBonusKey
   }
+  skillProficiencies: Record<string, boolean>
+  skillExpertise: Record<string, boolean>
 }
 
 interface AbilityRoll {
@@ -92,6 +95,27 @@ const abilityDefinitions: Array<{ key: AbilityKey; label: string; short: string 
   { key: 'int', label: '智力', short: 'INT' },
   { key: 'wis', label: '感知', short: 'WIS' },
   { key: 'cha', label: '魅力', short: 'CHA' },
+]
+
+const skillDefinitions: Array<{ key: string; name: string; abilityKey: AbilityKey }> = [
+  { key: 'athletics', name: '运动', abilityKey: 'str' },
+  { key: 'acrobatics', name: '杂技', abilityKey: 'dex' },
+  { key: 'sleight-of-hand', name: '巧手', abilityKey: 'dex' },
+  { key: 'stealth', name: '隐匿', abilityKey: 'dex' },
+  { key: 'arcana', name: '奥秘', abilityKey: 'int' },
+  { key: 'history', name: '历史', abilityKey: 'int' },
+  { key: 'investigation', name: '调查', abilityKey: 'int' },
+  { key: 'nature', name: '自然', abilityKey: 'int' },
+  { key: 'religion', name: '宗教', abilityKey: 'int' },
+  { key: 'animal-handling', name: '驯兽', abilityKey: 'wis' },
+  { key: 'insight', name: '洞悉', abilityKey: 'wis' },
+  { key: 'medicine', name: '医药', abilityKey: 'wis' },
+  { key: 'perception', name: '察觉', abilityKey: 'wis' },
+  { key: 'survival', name: '求生', abilityKey: 'wis' },
+  { key: 'deception', name: '欺瞒', abilityKey: 'cha' },
+  { key: 'intimidation', name: '威吓', abilityKey: 'cha' },
+  { key: 'performance', name: '表演', abilityKey: 'cha' },
+  { key: 'persuasion', name: '说服', abilityKey: 'cha' },
 ]
 
 const createDefaultAbilityScores = (): Record<AbilityKey, number> => ({
@@ -116,6 +140,16 @@ const createDefaultAbilityBonuses = (): CharacterDraft['abilityBonuses'] => ({
   plus2: '',
   plus1: '',
 })
+
+const createDefaultSkillSelection = () => {
+  return skillDefinitions.reduce(
+    (selection, skill) => {
+      selection[skill.key] = false
+      return selection
+    },
+    {} as Record<string, boolean>,
+  )
+}
 
 const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   id: crypto.randomUUID(),
@@ -289,6 +323,8 @@ const creationDraft = reactive<CharacterDraft>({
   abilityScores: createDefaultAbilityScores(),
   abilityAssignments: createDefaultAbilityAssignments(),
   abilityBonuses: createDefaultAbilityBonuses(),
+  skillProficiencies: createDefaultSkillSelection(),
+  skillExpertise: createDefaultSkillSelection(),
 })
 const abilityRolls = ref<AbilityRoll[]>([])
 
@@ -442,6 +478,49 @@ const getFinalAbilityScore = (key: AbilityKey) => {
   return Math.min(30, creationDraft.abilityScores[key] + getAbilityBonus(key))
 }
 
+const currentProficiencyBonus = computed(() => {
+  return Math.max(2, Math.min(6, Math.ceil(creationDraft.level / 4) + 1))
+})
+
+const getSkillValue = (skillKey: string) => {
+  const skill = skillDefinitions.find((item) => item.key === skillKey)
+  if (!skill) return 0
+
+  const abilityModifier = modifier(getFinalAbilityScore(skill.abilityKey))
+  const proficiencyMultiplier = creationDraft.skillExpertise[skillKey] ? 2 : creationDraft.skillProficiencies[skillKey] ? 1 : 0
+  return abilityModifier + currentProficiencyBonus.value * proficiencyMultiplier
+}
+
+const selectedSkillProficiencyCount = computed(() => {
+  return Object.values(creationDraft.skillProficiencies).filter(Boolean).length
+})
+
+const selectedSkillExpertiseCount = computed(() => {
+  return Object.values(creationDraft.skillExpertise).filter(Boolean).length
+})
+
+const skillGroups = computed(() => {
+  return abilityDefinitions.map((ability) => {
+    const score = getFinalAbilityScore(ability.key)
+    const abilityModifier = modifier(score)
+    const skills = skillDefinitions
+      .filter((skill) => skill.abilityKey === ability.key)
+      .map((skill) => ({
+        ...skill,
+        value: getSkillValue(skill.key),
+        proficient: creationDraft.skillProficiencies[skill.key],
+        expertise: creationDraft.skillExpertise[skill.key],
+      }))
+
+    return {
+      ...ability,
+      score,
+      modifier: abilityModifier,
+      skills,
+    }
+  })
+})
+
 const abilityPreview = computed(() => {
   return abilityDefinitions.map((ability) => {
     const score = getFinalAbilityScore(ability.key)
@@ -525,16 +604,38 @@ const setAbilityBonus = (bonusType: 'plus2' | 'plus1', key: AbilityKey, checked:
   }
 }
 
+const setSkillProficiency = (skillKey: string, checked: boolean) => {
+  creationDraft.skillProficiencies[skillKey] = checked
+  if (!checked) {
+    creationDraft.skillExpertise[skillKey] = false
+  }
+}
+
+const setSkillExpertise = (skillKey: string, checked: boolean) => {
+  creationDraft.skillExpertise[skillKey] = checked
+  if (checked) {
+    creationDraft.skillProficiencies[skillKey] = true
+  }
+}
+
 const createAbilitiesFromDraft = (): Ability[] => {
   return abilityDefinitions.map((ability) => {
     const score = getFinalAbilityScore(ability.key)
     const baseModifier = modifier(score)
+    const skills = skillDefinitions
+      .filter((skill) => skill.abilityKey === ability.key)
+      .map((skill) => ({
+        name: skill.name,
+        value: getSkillValue(skill.key),
+        proficient: creationDraft.skillProficiencies[skill.key] || undefined,
+        expertise: creationDraft.skillExpertise[skill.key] || undefined,
+      }))
 
     return {
       ...ability,
       score,
       save: baseModifier,
-      skills: [],
+      skills,
     }
   })
 }
@@ -558,6 +659,8 @@ const resetCreationDraft = () => {
   Object.assign(creationDraft.abilityScores, createDefaultAbilityScores())
   Object.assign(creationDraft.abilityAssignments, createDefaultAbilityAssignments())
   Object.assign(creationDraft.abilityBonuses, createDefaultAbilityBonuses())
+  Object.assign(creationDraft.skillProficiencies, createDefaultSkillSelection())
+  Object.assign(creationDraft.skillExpertise, createDefaultSkillSelection())
   abilityRolls.value = []
 }
 
@@ -603,6 +706,8 @@ const finishCreation = () => {
     {} as Record<AbilityKey, number>,
   )
 
+  const perceptionSkillValue = getSkillValue('perception')
+
   const character = createCharacter({
     name: creationDraft.name.trim(),
     race: resolveCustomValue(creationDraft.species, creationDraft.customSpecies),
@@ -616,8 +721,8 @@ const finishCreation = () => {
     ac: 10 + modifier(finalAbilityScores.dex),
     initiative: modifier(finalAbilityScores.dex),
     speed: 30,
-    proficiency: 2,
-    passivePerception: 10 + modifier(finalAbilityScores.wis),
+    proficiency: currentProficiencyBonus.value,
+    passivePerception: 10 + perceptionSkillValue,
     attackBonus: 2 + Math.max(modifier(finalAbilityScores.str), modifier(finalAbilityScores.dex)),
     spellSaveDc: 10 + 2 + Math.max(modifier(finalAbilityScores.int), modifier(finalAbilityScores.wis), modifier(finalAbilityScores.cha)),
     abilities: createAbilitiesFromDraft(),
@@ -632,6 +737,7 @@ const finishCreation = () => {
 export const useCharacters = () => ({
   CUSTOM_OPTION,
   abilityDefinitions,
+  skillDefinitions,
   characterCreationConfig,
   characters,
   selectedId,
@@ -653,6 +759,10 @@ export const useCharacters = () => ({
   usedRollIds,
   abilityPreview,
   assignedRollCount,
+  currentProficiencyBonus,
+  skillGroups,
+  selectedSkillProficiencyCount,
+  selectedSkillExpertiseCount,
   isAbilityStepValid,
   isBasicStepValid,
   syncForm,
@@ -672,6 +782,9 @@ export const useCharacters = () => ({
   setAbilityBonus,
   getAbilityBonus,
   getFinalAbilityScore,
+  getSkillValue,
+  setSkillProficiency,
+  setSkillExpertise,
   resetCreationDraft,
   goNextCreationStep,
   goPreviousCreationStep,

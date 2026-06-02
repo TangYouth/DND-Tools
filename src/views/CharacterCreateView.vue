@@ -12,6 +12,7 @@ import sizeIcon from '../components/icons/tixing.png'
 import alignmentIcon from '../components/icons/zhenying.png'
 import classIcon from '../components/icons/zhiye.png'
 import abilityModeIcon from '../components/icons/shuxingshengcheng.png'
+import skillAllocationIcon from '../components/icons/jinengfenpei.png'
 import speciesIcon from '../components/icons/zhongzu.png'
 import strengthIcon from '../components/icons/liliang.png'
 import dexterityIcon from '../components/icons/minjie.png'
@@ -34,6 +35,10 @@ const {
   usedRollIds,
   abilityPreview,
   assignedRollCount,
+  currentProficiencyBonus,
+  skillGroups,
+  selectedSkillProficiencyCount,
+  selectedSkillExpertiseCount,
   isAbilityStepValid,
   isBasicStepValid,
   signed,
@@ -43,6 +48,8 @@ const {
   assignRollToAbility,
   setAbilityBonus,
   getFinalAbilityScore,
+  setSkillProficiency,
+  setSkillExpertise,
   goNextCreationStep,
   goPreviousCreationStep,
   resetCreationDraft,
@@ -88,7 +95,7 @@ const abilityIconMap: Record<string, string> = {
 const getAbilityIcon = (key: string) => abilityIconMap[key]
 
 const EXPECTED_ROLL_AVERAGE = 12.2446
-const ROLL_ANIMATION_DURATION = 1000
+const ROLL_ANIMATION_DURATION = 1500
 const ROLL_ANIMATION_INTERVAL = 90
 
 const isRollingAbilities = ref(false)
@@ -154,7 +161,6 @@ onUnmounted(() => {
   <section class="creation-workspace">
     <header class="creation-header">
       <div>
-        <p class="eyebrow">创建角色</p>
         <h1>创建角色</h1>
       </div>
       <button class="plain-button" type="button" @click="backToBoard">返回看板</button>
@@ -482,13 +488,68 @@ onUnmounted(() => {
       </footer>
     </section>
 
+    <section v-else-if="currentCreationStep?.id === 'skills'" class="creation-panel skills-step-panel">
+      <div class="skill-count-strip">
+        <span>已选熟练：<strong>{{ selectedSkillProficiencyCount }}</strong> 项</span>
+        <span>已选专精：<strong>{{ selectedSkillExpertiseCount }}</strong> 项</span>
+      </div>
+
+      <section class="skill-assignment-panel">
+        <div class="creation-section-title">
+          <span class="title-icon-wrap"><img :src="skillAllocationIcon" alt="" /></span>
+          <h2>技能分配</h2>
+        </div>
+
+        <div class="skill-group-grid">
+          <article v-for="group in skillGroups" :key="group.key" class="skill-group-card">
+            <header>
+              <strong>
+                <img :src="getAbilityIcon(group.key)" alt="" />
+                {{ group.label }}
+                <span>{{ group.score }}</span>
+              </strong>
+              <em>调整值 {{ signed(group.modifier) }}</em>
+            </header>
+
+            <div class="skill-table-head">
+              <span>技能名称</span>
+              <span>当前加值</span>
+              <span>熟练</span>
+              <span>专精</span>
+            </div>
+
+            <div v-if="group.skills.length === 0" class="skill-empty">暂无关联技能</div>
+            <div v-for="skill in group.skills" :key="skill.key" class="skill-row">
+              <span>{{ skill.name }}</span>
+              <strong>{{ signed(skill.value) }}</strong>
+              <el-checkbox
+                :model-value="creationDraft.skillProficiencies[skill.key]"
+                @change="setSkillProficiency(skill.key, Boolean($event))"
+              />
+              <el-checkbox
+                :model-value="creationDraft.skillExpertise[skill.key]"
+                @change="setSkillExpertise(skill.key, Boolean($event))"
+              />
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <footer class="creation-footer">
+        <button class="plain-button large-action" type="button" @click="goPreviousCreationStep">‹ 上一步：属性值</button>
+        <button class="primary-button large-action" type="button" @click="goNextCreationStep">
+          下一步：完成 ›
+        </button>
+      </footer>
+    </section>
+
     <section v-else class="creation-panel placeholder-step">
       <div class="creation-section-title">
         <span>{{ currentCreationStep?.index }}</span>
         <h2>{{ currentCreationStep?.label }}</h2>
       </div>
       <p>
-        这一部分已经在流程中预留。当前版本会先保存基本信息，后续可以继续接入属性生成、技能熟练项选择和最终确认。
+        初始编辑已经完成，剩余部分可以在角色卡处进行编辑
       </p>
       <footer class="creation-footer">
         <button class="plain-button" type="button" @click="goPreviousCreationStep">上一步</button>

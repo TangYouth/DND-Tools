@@ -52,9 +52,8 @@ const createCharacter = () => {
       </div>
 
       <div class="sidebar-footer">
-        <button type="button">战役</button>
-        <button type="button">笔记</button>
-        <button type="button">设置</button>
+        <button type="button">导入角色</button>
+        <button type="button">存储路径</button>
       </div>
     </aside>
 
