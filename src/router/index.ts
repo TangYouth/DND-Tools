@@ -13,6 +13,11 @@ const router = createRouter({
       component: () => import('../views/CharacterBoardView.vue'),
     },
     {
+      path: '/characters/features',
+      name: 'character-features',
+      component: () => import('../views/CharacterFeaturesView.vue'),
+    },
+    {
       path: '/characters/new',
       name: 'character-create',
       component: () => import('../views/CharacterCreateView.vue'),

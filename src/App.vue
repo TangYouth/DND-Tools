@@ -3,8 +3,16 @@ import { RouterLink, RouterView, useRouter } from 'vue-router'
 import { useCharacters } from './composables/useCharacters'
 
 const router = useRouter()
-const { characters, selectedCharacter, storageLocationLabel, selectCharacter, resetCreationDraft, chooseStorageFile, importCharactersFromFile } =
-  useCharacters()
+const {
+  characters,
+  selectedCharacter,
+  storageLocationLabel,
+  selectCharacter,
+  resetCreationDraft,
+  chooseStorageFile,
+  importCharactersFromFile,
+  getCharacterClassSummary,
+} = useCharacters()
 
 const openCharacter = (id: string) => {
   selectCharacter(id)
@@ -46,7 +54,7 @@ const createCharacter = () => {
           <span class="portrait">{{ character.name.slice(0, 1) }}</span>
           <span class="character-meta">
             <strong>{{ character.name }}</strong>
-            <small>Lv.{{ character.level }} {{ character.className }}</small>
+            <small>{{ getCharacterClassSummary(character) }}</small>
           </span>
           <span class="chevron">›</span>
         </button>

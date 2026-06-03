@@ -47,6 +47,11 @@
     "邪术师",
     "法师"
   ],
+  "genders": [
+    "男",
+    "女",
+    "非二元"
+  ],
   "alignments": [
     [
       "守序善良",
@@ -93,6 +98,7 @@
     "species": "人类",
     "className": "野蛮人",
     "level": 1,
+    "gender": "未说明",
     "alignment": "中立善良",
     "background": "侍僧",
     "size": "中型",

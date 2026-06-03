@@ -73,6 +73,7 @@ const completeCreation = () => {
 const previewIconMap: Record<string, string> = {
   姓名: characterIcon,
   种族: speciesIcon,
+  性别: characterIcon,
   职业: classIcon,
   等级: levelIcon,
   阵营: alignmentIcon,
@@ -181,6 +182,7 @@ onUnmounted(() => {
     </nav>
 
     <form v-if="currentCreationStep?.id === 'basic'" class="creation-panel" @submit.prevent="goNextCreationStep">
+      <div class="creation-tip">兼职职业和子职业可在角色卡面板的基本信息中继续编辑。</div>
       <div class="creation-basic-layout">
         <section class="creation-form-column">
           <div class="creation-section-title">
@@ -206,6 +208,13 @@ onUnmounted(() => {
             <label v-if="creationDraft.species === CUSTOM_OPTION" class="custom-field">
               自定义
               <el-input v-model="creationDraft.customSpecies" placeholder="例如：半精灵" />
+            </label>
+
+            <label>
+              <span class="field-label">性别</span>
+              <el-select v-model="creationDraft.gender" placeholder="选择性别">
+                <el-option v-for="gender in characterCreationConfig.genders" :key="gender" :label="gender" :value="gender" />
+              </el-select>
             </label>
 
             <label class="required-field">
@@ -356,7 +365,6 @@ onUnmounted(() => {
           </div>
 
           <div v-if="creationDraft.abilityMode === 'random'" class="roll-workbench">
-            <p class="hint-box">投掷 4 个 d6，去掉最低点数，记录 3 个最高点数的总和。重复 6 次后，将结果分配给六项属性。</p>
 
             <div class="roll-actions">
               <button class="primary-button" type="button" :disabled="isRollingAbilities" @click="startAbilityRollAnimation">

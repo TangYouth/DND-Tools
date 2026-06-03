@@ -67,11 +67,27 @@ interface Ability {
   skills: Skill[]
 }
 
+interface CharacterClassEntry {
+  id: string
+  className: string
+  level: number
+  subclass: string
+}
+
+interface CharacterTraitEntry {
+  id: string
+  title: string
+  source: string
+  description: string
+}
+
 interface Character {
   id: string
   name: string
   race: string
+  gender: string
   className: string
+  classes: CharacterClassEntry[]
   level: number
   background: string
   alignment: string
@@ -79,6 +95,7 @@ interface Character {
   hp: {
     current: number
     max: number
+    temporary: number
   }
   ac: number
   initiative: number
@@ -89,10 +106,13 @@ interface Character {
   spellSaveDc: number
   story: string
   abilities: Ability[]
+  feats: CharacterTraitEntry[]
+  features: CharacterTraitEntry[]
   proficiencies: {
     weapons: string
     armor: string
     tools: string
+    languages: string
     other: string
   }
   notes: string
@@ -103,6 +123,7 @@ interface CharacterDraft {
   name: string
   species: string
   customSpecies: string
+  gender: string
   className: string
   customClassName: string
   level: number
@@ -166,6 +187,8 @@ const skillDefinitions: Array<{ key: string; name: string; abilityKey: AbilityKe
   { key: 'persuasion', name: '说服', abilityKey: 'cha' },
 ]
 
+const calculateProficiencyBonus = (level: number) => 2 + Math.floor((Math.max(1, level) - 1) / 4)
+
 const createDefaultAbilityScores = (): Record<AbilityKey, number> => ({
   str: 10,
   dex: 10,
@@ -189,6 +212,30 @@ const createDefaultAbilityBonuses = (): CharacterDraft['abilityBonuses'] => ({
   plus1: '',
 })
 
+const createClassEntry = (className = characterCreationConfig.defaults.className, level = 1, subclass = ''): CharacterClassEntry => ({
+  id: crypto.randomUUID(),
+  className,
+  level: Math.min(20, Math.max(1, Number(level) || 1)),
+  subclass,
+})
+
+const createTraitEntry = (title = '', source = '', description = ''): CharacterTraitEntry => ({
+  id: crypto.randomUUID(),
+  title,
+  source,
+  description,
+})
+
+const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => ({
+    id: entry.id || crypto.randomUUID(),
+    title: entry.title?.trim() || '未命名',
+    source: entry.source?.trim() || '未填写',
+    description: entry.description?.trim() || '',
+  }))
+}
+
 const createDefaultSkillSelection = () => {
   return skillDefinitions.reduce(
     (selection, skill) => {
@@ -203,12 +250,14 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   id: crypto.randomUUID(),
   name: '未命名角色',
   race: '人类',
+  gender: characterCreationConfig.defaults.gender,
   className: '野蛮人',
+  classes: [createClassEntry('野蛮人', 1)],
   level: 1,
   background: '侍僧',
   alignment: '中立善良',
   size: '中型',
-  hp: { current: 8, max: 8 },
+  hp: { current: 8, max: 8, temporary: 0 },
   ac: 10,
   initiative: 0,
   speed: 30,
@@ -288,10 +337,13 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
       ],
     },
   ],
+  feats: [],
+  features: [],
   proficiencies: {
     weapons: '',
     armor: '',
     tools: '',
+    languages: '',
     other: '',
   },
   notes: '',
@@ -302,6 +354,72 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
 const loadCachedCharacters = (): Character[] => []
 
 const cloneCharacter = (character: Character): Character => JSON.parse(JSON.stringify(character)) as Character
+
+const normalizeClassEntries = (character: Partial<Character>) => {
+  const legacyClassName = character.className || characterCreationConfig.defaults.className
+  const legacyLevel = Math.min(20, Math.max(1, Number(character.level) || characterCreationConfig.defaults.level))
+  const entries = Array.isArray(character.classes) && character.classes.length > 0 ? character.classes : [createClassEntry(legacyClassName, legacyLevel)]
+
+  return entries
+    .map((entry) => ({
+      id: entry.id || crypto.randomUUID(),
+      className: entry.className?.trim() || legacyClassName,
+      level: Math.min(20, Math.max(1, Number(entry.level) || 1)),
+      subclass: entry.subclass?.trim() || '',
+    }))
+    .filter((entry) => entry.className)
+}
+
+const getClassTotalLevel = (classes: CharacterClassEntry[]) => {
+  return Math.min(
+    20,
+    Math.max(
+      1,
+      classes.reduce((total, entry) => total + (Number(entry.level) || 0), 0),
+    ),
+  )
+}
+
+const getCharacterClassSummary = (character: Pick<Character, 'className' | 'classes' | 'level'> | null | undefined) => {
+  if (!character) return ''
+  const classes = normalizeClassEntries(character)
+  return classes
+    .map((entry) => `${entry.className} Lv.${entry.level}${entry.subclass ? ` · ${entry.subclass}` : ''}`)
+    .join(' / ')
+}
+
+const normalizeCharacter = (character: Partial<Character>): Character => {
+  const classes = normalizeClassEntries(character)
+  const primaryClass = classes[0] ?? createClassEntry()
+  const level = getClassTotalLevel(classes)
+  const normalized = {
+    ...createCharacter(),
+    ...character,
+    gender: character.gender || characterCreationConfig.defaults.gender,
+    className: primaryClass.className,
+    classes,
+    level,
+    feats: normalizeTraitEntries(character.feats),
+    features: normalizeTraitEntries(character.features),
+    hp: {
+      current: Math.max(0, Number(character.hp?.current) || 0),
+      max: Math.max(1, Number(character.hp?.max) || 1),
+      temporary: Math.max(0, Number(character.hp?.temporary) || 0),
+    },
+    proficiency: calculateProficiencyBonus(level),
+    proficiencies: {
+      weapons: character.proficiencies?.weapons ?? '',
+      armor: character.proficiencies?.armor ?? '',
+      tools: character.proficiencies?.tools ?? '',
+      languages: character.proficiencies?.languages ?? '',
+      other: character.proficiencies?.other ?? '',
+    },
+    updatedAt: character.updatedAt || new Date().toISOString(),
+  }
+
+  normalized.hp.current = Math.min(normalized.hp.current, normalized.hp.max)
+  return normalized as Character
+}
 
 const characters = ref<Character[]>(loadCachedCharacters())
 const selectedId = ref(characters.value[0]?.id ?? '')
@@ -317,6 +435,7 @@ const creationDraft = reactive<CharacterDraft>({
   name: characterCreationConfig.defaults.name,
   species: characterCreationConfig.defaults.species,
   customSpecies: '',
+  gender: characterCreationConfig.defaults.gender,
   className: characterCreationConfig.defaults.className,
   customClassName: '',
   level: characterCreationConfig.defaults.level,
@@ -348,7 +467,7 @@ const hpPercent = computed(() => {
 
 const syncForm = () => {
   if (!selectedCharacter.value) return
-  Object.assign(form, cloneCharacter(selectedCharacter.value))
+  Object.assign(form, cloneCharacter(normalizeCharacter(selectedCharacter.value)))
 }
 
 watch(selectedCharacter, syncForm)
@@ -405,11 +524,12 @@ const parseCharactersJson = (text: string): Character[] => {
 
   return importedCharacters
     .filter((character): character is Character => Boolean(character && typeof character === 'object' && character.name))
-    .map((character) => ({
-      ...character,
-      id: character.id || crypto.randomUUID(),
-      updatedAt: character.updatedAt || new Date().toISOString(),
-    }))
+    .map((character) =>
+      normalizeCharacter({
+        ...character,
+        id: character.id || crypto.randomUUID(),
+      }),
+    )
 }
 
 const getCharacterFileName = (character: Pick<Character, 'id'>) => `${character.id}.json`
@@ -495,6 +615,21 @@ watch(
 
 const modifier = (score: number) => Math.floor((score - 10) / 2)
 const signed = (value: number) => `${value >= 0 ? '+' : ''}${value}`
+const getSkillDefinitionByName = (name: string) => skillDefinitions.find((skill) => skill.name === name)
+
+const applyDerivedCharacterValues = (character: Character) => {
+  character.abilities.forEach((ability) => {
+    const abilityModifier = modifier(ability.score)
+    ability.save = abilityModifier + (ability.proficient ? character.proficiency : 0)
+    ability.skills.forEach((skill) => {
+      const skillDefinition = getSkillDefinitionByName(skill.name)
+      const sourceAbility = skillDefinition ? character.abilities.find((item) => item.key === skillDefinition.abilityKey) : ability
+      const sourceModifier = modifier(sourceAbility?.score ?? ability.score)
+      const proficiencyMultiplier = skill.expertise ? 2 : skill.proficient ? 1 : 0
+      skill.value = sourceModifier + character.proficiency * proficiencyMultiplier
+    })
+  })
+}
 
 const selectCharacter = (id: string) => {
   selectedId.value = id
@@ -510,8 +645,13 @@ const addCharacter = () => {
 const saveForm = () => {
   const index = characters.value.findIndex((character) => character.id === form.id)
   if (index === -1) return
-  form.updatedAt = new Date().toISOString()
-  characters.value[index] = cloneCharacter(form)
+  const normalizedForm = normalizeCharacter({
+    ...form,
+    updatedAt: new Date().toISOString(),
+  })
+  applyDerivedCharacterValues(normalizedForm)
+  characters.value[index] = cloneCharacter(normalizedForm)
+  Object.assign(form, cloneCharacter(normalizedForm))
   isEditing.value = false
 }
 
@@ -534,7 +674,7 @@ const mergeImportedCharacters = (importedCharacters: Character[]) => {
     const id = existingIds.has(character.id) ? crypto.randomUUID() : character.id
     existingIds.add(id)
     return {
-      ...character,
+      ...normalizeCharacter(character),
       id,
       updatedAt: character.updatedAt || new Date().toISOString(),
     }
@@ -616,6 +756,19 @@ const exportJson = () => {
   URL.revokeObjectURL(url)
 }
 
+const exportSelectedCharacter = () => {
+  if (!selectedCharacter.value) return
+
+  const data = JSON.stringify(selectedCharacter.value, null, 2)
+  const blob = new Blob([data], { type: 'application/json;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = `${selectedCharacter.value.name || 'character'}-${selectedCharacter.value.id}.json`
+  anchor.click()
+  URL.revokeObjectURL(url)
+}
+
 const importJson = async (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
@@ -634,7 +787,13 @@ const importJson = async (event: Event) => {
 }
 
 const metricCards = computed(() => [
-  { label: 'HP', value: `${selectedCharacter.value?.hp.current ?? 0} / ${selectedCharacter.value?.hp.max ?? 0}`, tone: 'green' },
+  {
+    label: 'HP',
+    value: `${selectedCharacter.value?.hp.current ?? 0} / ${selectedCharacter.value?.hp.max ?? 0}${
+      selectedCharacter.value?.hp.temporary ? ` +${selectedCharacter.value.hp.temporary}` : ''
+    }`,
+    tone: 'green',
+  },
   { label: 'AC', value: selectedCharacter.value?.ac ?? '-', tone: 'steel' },
   { label: '先攻', value: signed(selectedCharacter.value?.initiative ?? 0), tone: 'violet' },
   { label: '速度', value: `${selectedCharacter.value?.speed ?? 0} 尺`, tone: 'amber' },
@@ -648,6 +807,7 @@ const proficiencyRows = computed(() => [
   ['武器熟练项', selectedCharacter.value?.proficiencies.weapons ?? ''],
   ['护甲熟练项', selectedCharacter.value?.proficiencies.armor ?? ''],
   ['工具熟练项', selectedCharacter.value?.proficiencies.tools ?? ''],
+  ['语言', selectedCharacter.value?.proficiencies.languages ?? ''],
   ['其他熟练项', selectedCharacter.value?.proficiencies.other ?? ''],
 ])
 
@@ -661,6 +821,7 @@ const resolveCustomValue = (value: string, customValue: string) => {
 const previewRows = computed(() => [
   ['姓名', creationDraft.name.trim() || '未命名角色'],
   ['种族', resolveCustomValue(creationDraft.species, creationDraft.customSpecies) || '待填写'],
+  ['性别', creationDraft.gender || '未说明'],
   ['职业', resolveCustomValue(creationDraft.className, creationDraft.customClassName) || '待填写'],
   ['等级', String(creationDraft.level || 1)],
   ['阵营', creationDraft.alignment || '待选择'],
@@ -690,7 +851,7 @@ const getFinalAbilityScore = (key: AbilityKey) => {
 }
 
 const currentProficiencyBonus = computed(() => {
-  return Math.max(2, Math.min(6, Math.ceil(creationDraft.level / 4) + 1))
+  return calculateProficiencyBonus(creationDraft.level)
 })
 
 const getSkillValue = (skillKey: string) => {
@@ -856,6 +1017,7 @@ const resetCreationDraft = () => {
     name: characterCreationConfig.defaults.name,
     species: characterCreationConfig.defaults.species,
     customSpecies: '',
+    gender: characterCreationConfig.defaults.gender,
     className: characterCreationConfig.defaults.className,
     customClassName: '',
     level: characterCreationConfig.defaults.level,
@@ -922,13 +1084,19 @@ const finishCreation = () => {
   const character = createCharacter({
     name: creationDraft.name.trim(),
     race: resolveCustomValue(creationDraft.species, creationDraft.customSpecies),
+    gender: creationDraft.gender,
     className: resolveCustomValue(creationDraft.className, creationDraft.customClassName),
+    classes: [createClassEntry(resolveCustomValue(creationDraft.className, creationDraft.customClassName), creationDraft.level)],
     level: creationDraft.level,
     alignment: creationDraft.alignment,
     background: resolveCustomValue(creationDraft.background, creationDraft.customBackground),
     size: resolveCustomValue(creationDraft.size, creationDraft.customSize),
     story: creationDraft.story.trim() || '这个角色的背景故事还在旅途中慢慢成形。',
-    hp: { current: Math.max(1, 8 + modifier(finalAbilityScores.con)), max: Math.max(1, 8 + modifier(finalAbilityScores.con)) },
+    hp: {
+      current: Math.max(1, 8 + modifier(finalAbilityScores.con)),
+      max: Math.max(1, 8 + modifier(finalAbilityScores.con)),
+      temporary: 0,
+    },
     ac: 10 + modifier(finalAbilityScores.dex),
     initiative: modifier(finalAbilityScores.dex),
     speed: 30,
@@ -985,9 +1153,15 @@ export const useCharacters = () => ({
   addCharacter,
   saveForm,
   deleteCharacter,
+  calculateProficiencyBonus,
+  getClassTotalLevel,
+  getCharacterClassSummary,
+  createClassEntry,
+  createTraitEntry,
   chooseStorageFile,
   importCharactersFromFile,
   exportJson,
+  exportSelectedCharacter,
   importJson,
   resolveCustomValue,
   rollAbilityScores,

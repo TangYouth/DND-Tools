@@ -257,6 +257,43 @@ h1 {
   justify-content: flex-end;
 }
 
+.character-subtitle {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.character-page-tabs {
+  display: flex;
+  gap: 34px;
+  margin: 0 0 22px;
+  border-bottom: 1px solid var(--line);
+}
+
+.character-page-tab {
+  position: relative;
+  padding: 0 0 14px;
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.character-page-tab.active {
+  color: var(--ink);
+}
+
+.character-page-tab.active::after {
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: #8a642f;
+  content: '';
+}
+
 .plain-button,
 .primary-button,
 .danger-button {
@@ -352,6 +389,12 @@ h1 {
   margin-bottom: 16px;
 }
 
+.title-edit-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
 .section-title h2,
 .notes-panel h2 {
   margin: 0;
@@ -425,6 +468,13 @@ h1 {
   line-height: 1.8;
 }
 
+.story-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(4, minmax(116px, 1fr));
@@ -432,6 +482,7 @@ h1 {
 }
 
 .metric-card {
+  position: relative;
   display: grid;
   min-height: 116px;
   align-content: center;
@@ -443,15 +494,58 @@ h1 {
   text-align: center;
 }
 
+.metric-card.interactive {
+  cursor: pointer;
+}
+
+.metric-card.interactive:hover {
+  border-color: rgba(63, 128, 88, 0.6);
+  background: rgba(255, 255, 255, 0.68);
+}
+
+.metric-card.interactive::after {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  border: 1px solid rgba(53, 119, 84, 0.24);
+  border-radius: 999px;
+  padding: 2px 8px;
+  color: var(--green);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 12px;
+  font-weight: 700;
+  content: '调整';
+}
+
 .metric-card span {
   color: currentColor;
   font-weight: 700;
+}
+
+.metric-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.metric-label img {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .metric-card strong {
   color: var(--ink);
   font-size: 30px;
   line-height: 1;
+}
+
+.metric-action-hint {
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .metric-card i {
@@ -510,6 +604,20 @@ h1 {
 .ability-card header span {
   font-size: 18px;
   font-weight: 700;
+}
+
+.ability-card header .ability-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.ability-label img {
+  width: 26px;
+  height: 26px;
+  flex: 0 0 auto;
+  object-fit: contain;
 }
 
 .ability-card header small {
@@ -635,6 +743,160 @@ h1 {
   color: var(--muted);
 }
 
+.trait-panel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 241, 0.65)),
+    var(--paper);
+  box-shadow: 0 16px 44px rgba(68, 45, 20, 0.08);
+}
+
+.trait-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trait-panel h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.trait-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(220px, 1fr));
+  gap: 18px;
+}
+
+.trait-card {
+  position: relative;
+  display: grid;
+  gap: 12px;
+  min-height: 230px;
+  align-content: start;
+  padding: 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.trait-card:hover .trait-card-actions {
+  opacity: 1;
+}
+
+.trait-card-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 160ms ease;
+}
+
+.trait-card-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
+}
+
+.trait-card h3 {
+  margin: 0;
+  padding-right: 112px;
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.trait-source {
+  margin: 0;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+  color: #8a642f;
+  font-weight: 700;
+}
+
+.trait-description {
+  margin: 0;
+  color: #3f3429;
+  line-height: 1.8;
+}
+
+.trait-empty {
+  display: grid;
+  min-height: 130px;
+  place-items: center;
+  border: 1px dashed rgba(184, 153, 107, 0.7);
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.28);
+  font-size: 17px;
+  font-weight: 700;
+}
+
+.trait-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 42;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.38);
+  backdrop-filter: blur(4px);
+}
+
+.trait-dialog {
+  display: grid;
+  width: min(680px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  gap: 18px;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 26px 72px rgba(21, 18, 14, 0.3);
+}
+
+.trait-dialog > header,
+.trait-dialog > footer {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.trait-dialog > header {
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.trait-dialog > footer {
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.trait-dialog h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.trait-dialog-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.trait-dialog-form .wide-field {
+  grid-column: 1 / -1;
+}
+
 .creation-workspace {
   display: grid;
   gap: 20px;
@@ -722,6 +984,16 @@ h1 {
     linear-gradient(120deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 241, 0.7)),
     var(--paper);
   box-shadow: 0 16px 44px rgba(68, 45, 20, 0.08);
+}
+
+.creation-tip {
+  padding: 12px 14px;
+  border: 1px solid rgba(138, 100, 47, 0.28);
+  border-radius: 8px;
+  color: #5b4321;
+  background: rgba(255, 255, 255, 0.42);
+  font-size: 15px;
+  font-weight: 700;
 }
 
 .creation-basic-layout {
@@ -1607,6 +1879,249 @@ select {
   gap: 12px;
 }
 
+.card-edit-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+
+.class-editor {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(216, 201, 181, 0.82);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.class-editor header {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) minmax(160px, auto) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.class-editor header strong {
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.class-editor header span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.class-edit-row {
+  display: grid;
+  grid-template-columns: minmax(140px, 1fr) 120px minmax(160px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.hp-dialog-body {
+  display: grid;
+  gap: 18px;
+}
+
+.hp-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(18, 18, 18, 0.38);
+  backdrop-filter: blur(4px);
+}
+
+.hp-dialog {
+  display: grid;
+  width: min(720px, 100%);
+  max-height: min(760px, calc(100vh - 48px));
+  gap: 18px;
+  overflow: auto;
+  padding: 24px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  box-shadow: 0 26px 72px rgba(21, 18, 14, 0.3);
+}
+
+.hp-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.hp-dialog h2 {
+  margin: 0;
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.hp-dialog-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hp-dialog-summary div {
+  display: grid;
+  gap: 6px;
+  min-height: 92px;
+  align-content: center;
+  padding: 16px;
+  border: 1px solid rgba(216, 201, 181, 0.82);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.74);
+}
+
+.hp-dialog-summary span,
+.hp-action-block p {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.hp-dialog-summary strong {
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.hp-dialog-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.hp-action-block {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  padding: 16px;
+  border: 1px solid rgba(216, 201, 181, 0.82);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.hp-action-block h3,
+.hp-action-block p {
+  margin: 0;
+}
+
+.hp-action-block h3 {
+  color: var(--ink);
+  font-size: 17px;
+}
+
+.hp-action-block p {
+  min-height: 44px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.hp-action-block .el-input-number {
+  width: 100%;
+}
+
+.card-edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.proficiency-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.ability-compact-editor {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.ability-compact-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.36);
+}
+
+.ability-compact-card header {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(216, 201, 181, 0.68);
+}
+
+.ability-compact-card header strong {
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.ability-compact-card header span,
+.ability-compact-controls > span,
+.skill-compact-row strong {
+  font-weight: 800;
+}
+
+.ability-compact-controls {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto auto;
+  gap: 10px;
+  align-items: end;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(216, 201, 181, 0.62);
+}
+
+.ability-compact-controls > span {
+  align-self: center;
+  color: #5b4321;
+  white-space: nowrap;
+}
+
+.skill-compact-list {
+  display: grid;
+}
+
+.skill-compact-row {
+  display: grid;
+  grid-template-columns: minmax(56px, 1fr) 42px 64px 64px;
+  gap: 8px;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 12px;
+  border-bottom: 1px solid rgba(216, 201, 181, 0.54);
+}
+
+.skill-compact-row:last-child {
+  border-bottom: 0;
+}
+
+.skill-compact-row > span {
+  color: #4a3d30;
+  font-weight: 700;
+}
+
+.skill-compact-empty {
+  display: grid;
+  min-height: 72px;
+  place-items: center;
+  color: rgba(101, 86, 67, 0.5);
+  font-weight: 700;
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -1648,8 +2163,35 @@ textarea {
   background: rgba(255, 255, 255, 0.42);
 }
 
+.ability-edit-row.detailed {
+  align-items: start;
+}
+
 .ability-edit-row strong {
   padding-bottom: 11px;
+}
+
+.skill-edit-list {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: 8px;
+  padding-top: 4px;
+}
+
+.skill-edit-row {
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(120px, 160px) 90px 90px;
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid rgba(216, 201, 181, 0.62);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.skill-edit-row > span {
+  color: #4a3d30;
+  font-weight: 700;
 }
 
 .checkbox-field {
@@ -1670,6 +2212,10 @@ textarea {
 
   .ability-grid {
     grid-template-columns: repeat(3, minmax(150px, 1fr));
+  }
+
+  .trait-grid {
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }
 
@@ -1766,7 +2312,13 @@ textarea {
   }
 
   .proficiency-rule-grid,
-  .skill-group-grid {
+  .skill-group-grid,
+  .trait-grid,
+  .ability-compact-editor,
+  .class-editor header,
+  .class-edit-row,
+  .hp-dialog-actions,
+  .proficiency-edit-grid {
     grid-template-columns: 1fr;
   }
 
@@ -1783,8 +2335,15 @@ textarea {
   .character-list,
   .metric-grid,
   .ability-grid,
+  .trait-dialog-form,
+  .hp-dialog-summary,
   .form-grid,
   .ability-edit-row,
+  .proficiency-edit-grid,
+  .skill-edit-row,
+  .ability-compact-editor,
+  .ability-compact-controls,
+  .skill-compact-row,
   .info-grid {
     grid-template-columns: 1fr;
   }
@@ -1797,8 +2356,33 @@ textarea {
     flex: 1 1 140px;
   }
 
+  .card-edit-actions {
+    flex-direction: column;
+  }
+
   .panel {
     padding: 16px;
+  }
+
+  .trait-panel,
+  .trait-dialog {
+    padding: 16px;
+  }
+
+  .trait-panel > header,
+  .trait-dialog > header,
+  .trait-dialog > footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .trait-card-actions {
+    position: static;
+    opacity: 1;
+  }
+
+  .trait-card h3 {
+    padding-right: 0;
   }
 
   .creation-panel {
@@ -1881,5 +2465,14 @@ textarea {
 
   .edit-drawer footer span {
     display: none;
+  }
+
+  .hp-dialog-backdrop {
+    padding: 14px;
+  }
+
+  .hp-dialog,
+  .hp-dialog-summary {
+    grid-template-columns: 1fr;
   }
 }
