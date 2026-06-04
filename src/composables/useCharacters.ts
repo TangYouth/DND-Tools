@@ -115,6 +115,25 @@ interface CharacterCustomResource {
   max: number
 }
 
+type InventoryItemLocation = 'equipment' | 'backpack'
+
+interface CharacterInventoryItem {
+  id: string
+  name: string
+  quantity: number
+  value: number
+  description: string
+  requiresAttunement: boolean
+  attuned: boolean
+  location: InventoryItemLocation
+}
+
+interface CharacterAdventureLogEntry {
+  id: string
+  title: string
+  description: string
+}
+
 interface Character {
   id: string
   name: string
@@ -146,6 +165,10 @@ interface Character {
   spellSlots: Record<string, SpellSlot>
   hitDice: CharacterHitDieResource[]
   resources: CharacterCustomResource[]
+  gold: number
+  attunementMax: number
+  inventoryItems: CharacterInventoryItem[]
+  adventureLogs: CharacterAdventureLogEntry[]
   proficiencies: {
     weapons: string
     armor: string
@@ -314,6 +337,31 @@ const createCustomResource = (name = '', current = 0, max = 0): CharacterCustomR
   }
 }
 
+const createInventoryItem = (
+  name = '',
+  quantity = 1,
+  value = 0,
+  description = '',
+  requiresAttunement = false,
+  location: InventoryItemLocation = 'backpack',
+  attuned = false,
+): CharacterInventoryItem => ({
+  id: crypto.randomUUID(),
+  name,
+  quantity: Math.max(1, Number(quantity) || 1),
+  value: Math.max(0, Number(value) || 0),
+  description,
+  requiresAttunement,
+  attuned: requiresAttunement && attuned,
+  location,
+})
+
+const createAdventureLogEntry = (title = '', description = ''): CharacterAdventureLogEntry => ({
+  id: crypto.randomUUID(),
+  title,
+  description,
+})
+
 const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
   if (!Array.isArray(entries)) return []
   return entries.map((entry) => ({
@@ -355,6 +403,32 @@ const normalizeCustomResources = (entries: CharacterCustomResource[] | undefined
       max,
     }
   })
+}
+
+const normalizeInventoryItems = (entries: CharacterInventoryItem[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => {
+    const requiresAttunement = Boolean(entry.requiresAttunement)
+    return {
+      id: entry.id || crypto.randomUUID(),
+      name: entry.name?.trim() || '未命名物品',
+      quantity: Math.max(1, Number(entry.quantity) || 1),
+      value: Math.max(0, Number(entry.value) || 0),
+      description: entry.description?.trim() || '',
+      requiresAttunement,
+      attuned: requiresAttunement && Boolean(entry.attuned),
+      location: entry.location === 'equipment' ? 'equipment' : 'backpack',
+    }
+  })
+}
+
+const normalizeAdventureLogs = (entries: CharacterAdventureLogEntry[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => ({
+    id: entry.id || crypto.randomUUID(),
+    title: entry.title?.trim() || '未命名日志',
+    description: entry.description?.trim() || '',
+  }))
 }
 
 const createDefaultSpellSlots = (): Record<string, SpellSlot> => {
@@ -501,6 +575,10 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   spellSlots: createDefaultSpellSlots(),
   hitDice: [],
   resources: [],
+  gold: 0,
+  attunementMax: 3,
+  inventoryItems: [],
+  adventureLogs: [],
   proficiencies: {
     weapons: '',
     armor: '',
@@ -567,6 +645,10 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
     spellSlots: normalizeSpellSlots(character.spellSlots),
     hitDice: normalizeHitDice(classes, character.hitDice),
     resources: normalizeCustomResources(character.resources),
+    gold: Math.max(0, Number(character.gold) || 0),
+    attunementMax: Math.max(0, Number(character.attunementMax) || 3),
+    inventoryItems: normalizeInventoryItems(character.inventoryItems),
+    adventureLogs: normalizeAdventureLogs(character.adventureLogs),
     hp: {
       current: Math.max(0, Number(character.hp?.current) || 0),
       max: Math.max(1, Number(character.hp?.max) || 1),
@@ -1327,6 +1409,8 @@ export const useCharacters = () => ({
   createSpellEntry,
   createDefaultSpellSlots,
   createCustomResource,
+  createInventoryItem,
+  createAdventureLogEntry,
   chooseStorageFile,
   importCharactersFromFile,
   exportJson,

@@ -266,6 +266,7 @@ h1 {
 
 .character-page-tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 34px;
   margin: 0 0 22px;
   border-bottom: 1px solid var(--line);
@@ -1497,6 +1498,396 @@ h1 {
 .resource-dialog-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 140px 140px;
+  gap: 14px;
+}
+
+.item-management-panel {
+  display: grid;
+  gap: 18px;
+  margin-bottom: 18px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 241, 0.65)),
+    var(--paper);
+  box-shadow: 0 16px 44px rgba(68, 45, 20, 0.08);
+}
+
+.item-management-panel > header,
+.item-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.item-management-panel h2,
+.item-section-heading h3 {
+  margin: 0;
+}
+
+.item-management-panel h2 {
+  font-size: 24px;
+}
+
+.item-section-heading {
+  justify-content: flex-start;
+}
+
+.item-section-heading h3 {
+  border-left: 3px solid #bc842c;
+  padding-left: 12px;
+  font-size: 20px;
+}
+
+.gold-editor-card,
+.attunement-status-card {
+  display: grid;
+  grid-template-columns: 76px minmax(160px, 0.6fr) minmax(320px, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  min-height: 92px;
+  padding: 18px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.gold-icon,
+.attunement-icon {
+  display: grid;
+  width: 58px;
+  height: 58px;
+  place-items: center;
+  border-radius: 999px;
+  color: #8a642f;
+  background: rgba(242, 214, 165, 0.5);
+  font-size: 18px;
+  font-weight: 900;
+}
+
+.attunement-icon {
+  color: #4f496c;
+  background: rgba(102, 73, 139, 0.14);
+  font-size: 30px;
+}
+
+.gold-editor-card h3 {
+  margin: 0 0 4px;
+  font-size: 18px;
+}
+
+.gold-editor-card strong,
+.attunement-status-card strong {
+  color: var(--ink);
+  font-size: 30px;
+  line-height: 1;
+}
+
+.gold-editor-card small {
+  color: var(--muted);
+  font-size: 16px;
+}
+
+.gold-quick-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+}
+
+.gold-quick-controls button {
+  min-width: 72px;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: #9a6724;
+  background: rgba(255, 255, 255, 0.42);
+  font-weight: 700;
+}
+
+.gold-quick-controls .el-input-number {
+  width: 170px;
+}
+
+.attunement-status-card span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.attunement-status-card p {
+  margin: 0;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 700;
+}
+
+.attunement-status-card label {
+  display: grid;
+  gap: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.item-card-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(240px, 1fr));
+  gap: 14px;
+}
+
+.inventory-item-card,
+.add-item-card {
+  min-height: 146px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.inventory-item-card {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr);
+  gap: 12px 14px;
+  align-content: start;
+  padding: 16px;
+}
+
+.inventory-item-card.attuned {
+  border-color: rgba(138, 100, 47, 0.62);
+  background: rgba(255, 250, 241, 0.74);
+}
+
+.item-card-icon {
+  display: grid;
+  width: 56px;
+  height: 56px;
+  place-items: center;
+  border-radius: 999px;
+  color: #6d4a3a;
+  background: rgba(139, 88, 51, 0.12);
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.item-card-body {
+  min-width: 0;
+}
+
+.item-card-body h3 {
+  overflow: hidden;
+  margin: 0 0 4px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 19px;
+}
+
+.item-card-body strong {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.item-card-body strong small {
+  margin-left: 6px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.item-card-body p {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.inventory-item-card footer {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: flex-end;
+  margin-top: 6px;
+}
+
+.inventory-item-card footer span {
+  margin-right: auto;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.inventory-item-card footer .plain-button {
+  min-height: 34px;
+}
+
+.danger-icon-button {
+  color: var(--danger);
+}
+
+.add-item-card {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 8px;
+  border-style: dashed;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.add-item-card span {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 2px solid #6d4a3a;
+  border-radius: 999px;
+  color: #6d4a3a;
+  font-size: 34px;
+}
+
+.add-item-card strong {
+  color: var(--ink);
+  font-size: 20px;
+}
+
+.add-item-card small {
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.item-dialog-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 140px 140px 170px;
+  gap: 14px;
+}
+
+.item-dialog-form .wide-field {
+  grid-column: 1 / -1;
+}
+
+.item-attunement-field {
+  align-self: end;
+}
+
+.adventure-log-panel {
+  display: grid;
+  gap: 22px;
+  margin-bottom: 18px;
+  padding: 26px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.78), rgba(255, 250, 241, 0.65)),
+    var(--paper);
+  box-shadow: 0 16px 44px rgba(68, 45, 20, 0.08);
+}
+
+.adventure-log-panel > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.adventure-log-panel h2 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.add-log-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #9a6724;
+  font-weight: 700;
+}
+
+.add-log-button span {
+  display: grid;
+  width: 22px;
+  height: 22px;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.adventure-log-list {
+  display: grid;
+  gap: 14px;
+}
+
+.adventure-log-card {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  min-height: 138px;
+  padding: 18px 22px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+  transition:
+    border-color 160ms ease,
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.adventure-log-card.dragging {
+  border-color: rgba(188, 132, 44, 0.74);
+  opacity: 0.62;
+  transform: scale(0.995);
+}
+
+.adventure-log-icon {
+  display: grid;
+  width: 68px;
+  height: 68px;
+  place-items: center;
+  border-radius: 999px;
+  color: #6d4a3a;
+  background: rgba(139, 88, 51, 0.12);
+  font-size: 30px;
+}
+
+.adventure-log-card h3 {
+  margin: 0 0 10px;
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.adventure-log-card p {
+  margin: 0;
+  color: #3f3429;
+  font-size: 17px;
+  line-height: 1.75;
+  white-space: pre-line;
+}
+
+.adventure-log-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.drag-handle {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  place-items: center;
+  color: var(--muted);
+  cursor: grab;
+  font-weight: 900;
+}
+
+.adventure-log-dialog-form {
+  display: grid;
   gap: 14px;
 }
 
@@ -2824,6 +3215,7 @@ textarea {
   .spell-slot-grid,
   .spell-card-grid,
   .spell-compact-grid,
+  .item-card-grid,
   .custom-resource-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
@@ -2928,8 +3320,12 @@ textarea {
   .spell-card-grid,
   .spell-compact-grid,
   .custom-resource-grid,
+  .item-card-grid,
   .hit-die-card,
+  .gold-editor-card,
+  .attunement-status-card,
   .resource-dialog-grid,
+  .item-dialog-form,
   .ability-compact-editor,
   .class-editor header,
   .class-edit-row,
@@ -2992,6 +3388,7 @@ textarea {
   .spell-slot-panel > header,
   .spell-list-panel > header,
   .resource-management-panel > header,
+  .adventure-log-panel > header,
   .trait-dialog > header,
   .trait-dialog > footer {
     align-items: stretch;
@@ -3010,14 +3407,31 @@ textarea {
   .spell-panel-actions,
   .spell-card > header,
   .spell-card > footer,
+  .adventure-log-card,
   .custom-resource-card footer {
     align-items: stretch;
     flex-direction: column;
   }
 
+  .adventure-log-card {
+    grid-template-columns: 1fr;
+  }
+
+  .adventure-log-actions {
+    justify-content: flex-end;
+  }
+
   .resource-count-block,
-  .hit-die-card {
+  .hit-die-card,
+  .gold-editor-card,
+  .attunement-status-card {
     justify-items: stretch;
+  }
+
+  .gold-quick-controls,
+  .attunement-status-card p {
+    justify-content: stretch;
+    text-align: left;
   }
 
   .custom-resource-card {
