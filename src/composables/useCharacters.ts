@@ -134,6 +134,34 @@ interface CharacterAdventureLogEntry {
   description: string
 }
 
+interface CreatureAbilityScores {
+  str: number
+  dex: number
+  con: number
+  int: number
+  wis: number
+  cha: number
+}
+
+interface CharacterCreatureEntry {
+  id: string
+  name: string
+  species: string
+  size: string
+  alignment: string
+  ac: number
+  hp: {
+    current: number
+    max: number
+    temporary: number
+  }
+  speed: string
+  abilities: CreatureAbilityScores
+  resistances: string
+  immunities: string
+  description: string
+}
+
 interface Character {
   id: string
   name: string
@@ -169,6 +197,7 @@ interface Character {
   attunementMax: number
   inventoryItems: CharacterInventoryItem[]
   adventureLogs: CharacterAdventureLogEntry[]
+  creatures: CharacterCreatureEntry[]
   proficiencies: {
     weapons: string
     armor: string
@@ -362,6 +391,49 @@ const createAdventureLogEntry = (title = '', description = ''): CharacterAdventu
   description,
 })
 
+const createCreatureEntry = (
+  name = '',
+  species = '',
+  size = '',
+  alignment = '',
+  ac = 10,
+  hpCurrent = 1,
+  hpMax = 1,
+  hpTemporary = 0,
+  speed = '',
+  abilities: Partial<CreatureAbilityScores> = {},
+  resistances = '',
+  immunities = '',
+  description = '',
+): CharacterCreatureEntry => {
+  const max = Math.max(1, Number(hpMax) || 1)
+  return {
+    id: crypto.randomUUID(),
+    name,
+    species,
+    size,
+    alignment,
+    ac: Math.max(0, Number(ac) || 0),
+    hp: {
+      current: Math.min(max, Math.max(0, Number(hpCurrent) || 0)),
+      max,
+      temporary: Math.max(0, Number(hpTemporary) || 0),
+    },
+    speed,
+    abilities: {
+      str: Math.max(1, Number(abilities.str) || 10),
+      dex: Math.max(1, Number(abilities.dex) || 10),
+      con: Math.max(1, Number(abilities.con) || 10),
+      int: Math.max(1, Number(abilities.int) || 10),
+      wis: Math.max(1, Number(abilities.wis) || 10),
+      cha: Math.max(1, Number(abilities.cha) || 10),
+    },
+    resistances,
+    immunities,
+    description,
+  }
+}
+
 const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
   if (!Array.isArray(entries)) return []
   return entries.map((entry) => ({
@@ -428,6 +500,30 @@ const normalizeAdventureLogs = (entries: CharacterAdventureLogEntry[] | undefine
     id: entry.id || crypto.randomUUID(),
     title: entry.title?.trim() || '未命名日志',
     description: entry.description?.trim() || '',
+  }))
+}
+
+const normalizeCreatures = (entries: CharacterCreatureEntry[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) =>
+    createCreatureEntry(
+      entry.name?.trim() || '未命名生物',
+      entry.species?.trim() || '未填写',
+      entry.size?.trim() || '未填写',
+      entry.alignment?.trim() || '未填写',
+      entry.ac,
+      entry.hp?.current,
+      entry.hp?.max,
+      entry.hp?.temporary,
+      entry.speed?.trim() || '未填写',
+      entry.abilities,
+      entry.resistances?.trim() || '',
+      entry.immunities?.trim() || '',
+      entry.description?.trim() || '',
+    ),
+  ).map((entry, index) => ({
+    ...entry,
+    id: entries[index]?.id || entry.id,
   }))
 }
 
@@ -579,6 +675,7 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   attunementMax: 3,
   inventoryItems: [],
   adventureLogs: [],
+  creatures: [],
   proficiencies: {
     weapons: '',
     armor: '',
@@ -649,6 +746,7 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
     attunementMax: Math.max(0, Number(character.attunementMax) || 3),
     inventoryItems: normalizeInventoryItems(character.inventoryItems),
     adventureLogs: normalizeAdventureLogs(character.adventureLogs),
+    creatures: normalizeCreatures(character.creatures),
     hp: {
       current: Math.max(0, Number(character.hp?.current) || 0),
       max: Math.max(1, Number(character.hp?.max) || 1),
@@ -1411,6 +1509,7 @@ export const useCharacters = () => ({
   createCustomResource,
   createInventoryItem,
   createAdventureLogEntry,
+  createCreatureEntry,
   chooseStorageFile,
   importCharactersFromFile,
   exportJson,

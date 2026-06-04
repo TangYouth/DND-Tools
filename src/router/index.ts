@@ -38,6 +38,11 @@ const router = createRouter({
       component: () => import('../views/CharacterAdventureLogsView.vue'),
     },
     {
+      path: '/characters/creatures',
+      name: 'character-creatures',
+      component: () => import('../views/CharacterCreaturesView.vue'),
+    },
+    {
       path: '/characters/new',
       name: 'character-create',
       component: () => import('../views/CharacterCreateView.vue'),
