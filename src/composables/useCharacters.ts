@@ -81,6 +81,24 @@ interface CharacterTraitEntry {
   description: string
 }
 
+interface SpellSlot {
+  current: number
+  max: number
+}
+
+interface CharacterSpellEntry {
+  id: string
+  name: string
+  level: number
+  school: string
+  castingTime: string
+  range: string
+  components: string
+  duration: string
+  description: string
+  prepared: boolean
+}
+
 interface Character {
   id: string
   name: string
@@ -108,6 +126,8 @@ interface Character {
   abilities: Ability[]
   feats: CharacterTraitEntry[]
   features: CharacterTraitEntry[]
+  spells: CharacterSpellEntry[]
+  spellSlots: Record<string, SpellSlot>
   proficiencies: {
     weapons: string
     armor: string
@@ -226,6 +246,29 @@ const createTraitEntry = (title = '', source = '', description = ''): CharacterT
   description,
 })
 
+const createSpellEntry = (
+  name = '',
+  level = 0,
+  school = '',
+  castingTime = '',
+  range = '',
+  components = '',
+  duration = '',
+  description = '',
+  prepared = false,
+): CharacterSpellEntry => ({
+  id: crypto.randomUUID(),
+  name,
+  level: Math.min(9, Math.max(0, Number(level) || 0)),
+  school,
+  castingTime,
+  range,
+  components,
+  duration,
+  description,
+  prepared,
+})
+
 const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
   if (!Array.isArray(entries)) return []
   return entries.map((entry) => ({
@@ -234,6 +277,43 @@ const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
     source: entry.source?.trim() || '未填写',
     description: entry.description?.trim() || '',
   }))
+}
+
+const createDefaultSpellSlots = (): Record<string, SpellSlot> => {
+  return Array.from({ length: 9 }, (_, index) => String(index + 1)).reduce(
+    (slots, level) => {
+      slots[level] = { current: 0, max: 0 }
+      return slots
+    },
+    {} as Record<string, SpellSlot>,
+  )
+}
+
+const normalizeSpellEntries = (entries: CharacterSpellEntry[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => ({
+    id: entry.id || crypto.randomUUID(),
+    name: entry.name?.trim() || '未命名法术',
+    level: Math.min(9, Math.max(0, Number(entry.level) || 0)),
+    school: entry.school?.trim() || '未填写',
+    castingTime: entry.castingTime?.trim() || '未填写',
+    range: entry.range?.trim() || '未填写',
+    components: entry.components?.trim() || '未填写',
+    duration: entry.duration?.trim() || '未填写',
+    description: entry.description?.trim() || '',
+    prepared: Boolean(entry.prepared),
+  }))
+}
+
+const normalizeSpellSlots = (slots: Record<string, SpellSlot> | undefined) => {
+  const normalizedSlots = createDefaultSpellSlots()
+  Object.keys(normalizedSlots).forEach((level) => {
+    const slot = slots?.[level]
+    const max = Math.max(0, Number(slot?.max) || 0)
+    const current = Math.min(max, Math.max(0, Number(slot?.current) || 0))
+    normalizedSlots[level] = { current, max }
+  })
+  return normalizedSlots
 }
 
 const createDefaultSkillSelection = () => {
@@ -339,6 +419,8 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   ],
   feats: [],
   features: [],
+  spells: [],
+  spellSlots: createDefaultSpellSlots(),
   proficiencies: {
     weapons: '',
     armor: '',
@@ -401,6 +483,8 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
     level,
     feats: normalizeTraitEntries(character.feats),
     features: normalizeTraitEntries(character.features),
+    spells: normalizeSpellEntries(character.spells),
+    spellSlots: normalizeSpellSlots(character.spellSlots),
     hp: {
       current: Math.max(0, Number(character.hp?.current) || 0),
       max: Math.max(1, Number(character.hp?.max) || 1),
@@ -1158,6 +1242,8 @@ export const useCharacters = () => ({
   getCharacterClassSummary,
   createClassEntry,
   createTraitEntry,
+  createSpellEntry,
+  createDefaultSpellSlots,
   chooseStorageFile,
   importCharactersFromFile,
   exportJson,

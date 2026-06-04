@@ -18,6 +18,11 @@ const router = createRouter({
       component: () => import('../views/CharacterFeaturesView.vue'),
     },
     {
+      path: '/characters/spells',
+      name: 'character-spells',
+      component: () => import('../views/CharacterSpellsView.vue'),
+    },
+    {
       path: '/characters/new',
       name: 'character-create',
       component: () => import('../views/CharacterCreateView.vue'),

@@ -205,6 +205,7 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
     <nav class="character-page-tabs" aria-label="角色页面">
       <RouterLink :to="{ name: 'characters' }" class="character-page-tab" active-class="active">属性</RouterLink>
       <RouterLink :to="{ name: 'character-features' }" class="character-page-tab" active-class="active">专长 / 特性</RouterLink>
+      <RouterLink :to="{ name: 'character-spells' }" class="character-page-tab" active-class="active">法术</RouterLink>
     </nav>
 
     <section class="board-grid">
