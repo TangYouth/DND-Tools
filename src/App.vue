@@ -29,7 +29,7 @@ const createCharacter = () => {
   <div class="app-shell">
     <aside class="sidebar">
       <div class="brand-mark">
-        <span>D20</span>
+        <span>DND</span>
       </div>
 
       <div class="side-heading">
