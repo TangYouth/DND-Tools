@@ -99,6 +99,22 @@ interface CharacterSpellEntry {
   prepared: boolean
 }
 
+interface CharacterHitDieResource {
+  id: string
+  classId: string
+  className: string
+  die: string
+  current: number
+  max: number
+}
+
+interface CharacterCustomResource {
+  id: string
+  name: string
+  current: number
+  max: number
+}
+
 interface Character {
   id: string
   name: string
@@ -128,6 +144,8 @@ interface Character {
   features: CharacterTraitEntry[]
   spells: CharacterSpellEntry[]
   spellSlots: Record<string, SpellSlot>
+  hitDice: CharacterHitDieResource[]
+  resources: CharacterCustomResource[]
   proficiencies: {
     weapons: string
     armor: string
@@ -207,6 +225,21 @@ const skillDefinitions: Array<{ key: string; name: string; abilityKey: AbilityKe
   { key: 'persuasion', name: '说服', abilityKey: 'cha' },
 ]
 
+const classHitDieMap: Record<string, string> = {
+  野蛮人: 'D12',
+  吟游诗人: 'D8',
+  牧师: 'D8',
+  德鲁伊: 'D8',
+  战士: 'D10',
+  武僧: 'D8',
+  圣武士: 'D10',
+  游侠: 'D10',
+  游荡者: 'D8',
+  术士: 'D6',
+  邪术师: 'D8',
+  法师: 'D6',
+}
+
 const calculateProficiencyBonus = (level: number) => 2 + Math.floor((Math.max(1, level) - 1) / 4)
 
 const createDefaultAbilityScores = (): Record<AbilityKey, number> => ({
@@ -269,6 +302,18 @@ const createSpellEntry = (
   prepared,
 })
 
+const getDefaultHitDie = (className: string) => classHitDieMap[className] ?? 'D8'
+
+const createCustomResource = (name = '', current = 0, max = 0): CharacterCustomResource => {
+  const normalizedMax = Math.max(0, Number(max) || 0)
+  return {
+    id: crypto.randomUUID(),
+    name,
+    current: Math.min(normalizedMax, Math.max(0, Number(current) || 0)),
+    max: normalizedMax,
+  }
+}
+
 const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
   if (!Array.isArray(entries)) return []
   return entries.map((entry) => ({
@@ -277,6 +322,39 @@ const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
     source: entry.source?.trim() || '未填写',
     description: entry.description?.trim() || '',
   }))
+}
+
+const normalizeHitDice = (classes: CharacterClassEntry[], entries: CharacterHitDieResource[] | undefined) => {
+  const existingByClassId = new Map((Array.isArray(entries) ? entries : []).map((entry) => [entry.classId, entry]))
+  const existingByClassName = new Map((Array.isArray(entries) ? entries : []).map((entry) => [entry.className, entry]))
+
+  return classes.map((classEntry) => {
+    const existing = existingByClassId.get(classEntry.id) ?? existingByClassName.get(classEntry.className)
+    const max = Math.max(1, Number(classEntry.level) || 1)
+    const current = Math.min(max, Math.max(0, Number(existing?.current) || max))
+
+    return {
+      id: existing?.id || crypto.randomUUID(),
+      classId: classEntry.id,
+      className: classEntry.className,
+      die: existing?.die || getDefaultHitDie(classEntry.className),
+      current,
+      max,
+    }
+  })
+}
+
+const normalizeCustomResources = (entries: CharacterCustomResource[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return entries.map((entry) => {
+    const max = Math.max(0, Number(entry.max) || 0)
+    return {
+      id: entry.id || crypto.randomUUID(),
+      name: entry.name?.trim() || '未命名资源',
+      current: Math.min(max, Math.max(0, Number(entry.current) || 0)),
+      max,
+    }
+  })
 }
 
 const createDefaultSpellSlots = (): Record<string, SpellSlot> => {
@@ -421,6 +499,8 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => ({
   features: [],
   spells: [],
   spellSlots: createDefaultSpellSlots(),
+  hitDice: [],
+  resources: [],
   proficiencies: {
     weapons: '',
     armor: '',
@@ -485,6 +565,8 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
     features: normalizeTraitEntries(character.features),
     spells: normalizeSpellEntries(character.spells),
     spellSlots: normalizeSpellSlots(character.spellSlots),
+    hitDice: normalizeHitDice(classes, character.hitDice),
+    resources: normalizeCustomResources(character.resources),
     hp: {
       current: Math.max(0, Number(character.hp?.current) || 0),
       max: Math.max(1, Number(character.hp?.max) || 1),
@@ -1244,6 +1326,7 @@ export const useCharacters = () => ({
   createTraitEntry,
   createSpellEntry,
   createDefaultSpellSlots,
+  createCustomResource,
   chooseStorageFile,
   importCharactersFromFile,
   exportJson,

@@ -23,6 +23,11 @@ const router = createRouter({
       component: () => import('../views/CharacterSpellsView.vue'),
     },
     {
+      path: '/characters/resources',
+      name: 'character-resources',
+      component: () => import('../views/CharacterResourcesView.vue'),
+    },
+    {
       path: '/characters/new',
       name: 'character-create',
       component: () => import('../views/CharacterCreateView.vue'),
