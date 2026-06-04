@@ -2,6 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
+import hitDieIcon from '../components/icons/shengmingtou.png'
 
 const hitDieOptions = ['D6', 'D8', 'D10', 'D12']
 
@@ -169,7 +170,6 @@ const removeResource = (resourceId: string) => {
         <h2>资源管理</h2>
         <div class="spell-panel-actions">
           <button class="primary-button" type="button" @click="restoreAllResources">恢复全部资源</button>
-          <button class="plain-button" type="button" @click="openResourceDialog()">添加资源</button>
         </div>
       </header>
 
@@ -180,7 +180,9 @@ const removeResource = (resourceId: string) => {
 
       <div v-if="selectedCharacter.hitDice.length > 0" class="hit-dice-list">
         <article v-for="resource in selectedCharacter.hitDice" :key="resource.id" class="hit-die-card">
-          <div class="hit-die-icon">◇</div>
+          <div class="hit-die-icon">
+            <img :src="hitDieIcon" alt="" />
+          </div>
           <div>
             <h3>生命骰 <small>职业资源</small></h3>
             <p>{{ resource.className }} · {{ resource.die }}</p>
@@ -201,7 +203,7 @@ const removeResource = (resourceId: string) => {
 
       <div class="resource-section-heading">
         <h3>自定义资源</h3>
-        <span title="自定义角色特有的资源，只记录当前值和最大值。"></span>
+        <button class="plain-button" type="button" @click="openResourceDialog()">添加资源</button>
       </div>
 
       <div v-if="selectedCharacter.resources.length > 0" class="custom-resource-grid">
@@ -220,11 +222,7 @@ const removeResource = (resourceId: string) => {
           </footer>
         </article>
       </div>
-      <button v-else class="add-resource-card" type="button" @click="openResourceDialog()">
-        <span>＋</span>
-        <strong>添加资源</strong>
-        <small>自定义角色特有的资源</small>
-      </button>
+      <div v-else class="trait-empty">当前角色暂无自定义资源。</div>
     </section>
 
     <Teleport to="body">

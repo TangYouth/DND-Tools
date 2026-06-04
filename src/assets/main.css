@@ -1217,7 +1217,13 @@ h1 {
 .hit-die-icon {
   width: 82px;
   height: 82px;
-  font-size: 48px;
+}
+
+.hit-die-icon img {
+  display: block;
+  width: 58px;
+  height: 58px;
+  object-fit: contain;
 }
 
 .hit-die-card h3 {
@@ -1304,11 +1310,12 @@ h1 {
 }
 
 .custom-resource-card {
+  position: relative;
   display: grid;
   grid-template-columns: 64px 1fr;
   gap: 12px 16px;
   align-content: start;
-  padding: 22px;
+  padding: 22px 22px 62px;
 }
 
 .custom-resource-icon {
@@ -1326,15 +1333,31 @@ h1 {
 }
 
 .custom-resource-card .resource-stepper {
-  grid-column: 2;
+  grid-column: 1 / -1;
+  justify-self: center;
+  margin-top: 4px;
 }
 
 .custom-resource-card footer {
-  grid-column: 1 / -1;
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition:
+    opacity 160ms ease,
+    transform 160ms ease;
+}
+
+.custom-resource-card:hover footer,
+.custom-resource-card:focus-within footer {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
 }
 
 .add-resource-card {
