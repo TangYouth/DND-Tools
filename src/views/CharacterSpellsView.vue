@@ -19,6 +19,7 @@ const {
 } = useCharacters()
 
 const activeSpellLevel = ref(-1)
+const isCompactSpellView = ref(false)
 const editingSpellId = ref('')
 const isSpellDialogOpen = ref(false)
 const isSlotEditorOpen = ref(false)
@@ -47,11 +48,18 @@ const displaySlotLevels = computed(() => {
 const filteredSpells = computed(() => {
   if (!selectedCharacter.value) return []
   if (activeSpellLevel.value === -1) return selectedCharacter.value.spells
+  if (activeSpellLevel.value === -2) {
+    return selectedCharacter.value.spells.filter((spell) => spell.level > 0 && spell.prepared)
+  }
   return selectedCharacter.value.spells.filter((spell) => spell.level === activeSpellLevel.value)
 })
 
 const getSpellLevelLabel = (level: number) => (level === 0 ? '戏法' : `${level}环`)
 const getPreparedLabel = (prepared: boolean) => (prepared ? '已准备' : '准备')
+const getSpellPreparedStatus = (level: number, prepared: boolean) => {
+  if (level === 0) return '无需准备'
+  return prepared ? '已准备' : '未准备'
+}
 const ensureSpellSlot = (level: number) => {
   const key = String(level)
   const slot = form.spellSlots[key] ?? { current: 0, max: 0 }
@@ -206,7 +214,6 @@ const adjustSlot = (level: number, delta: number) => {
       <header>
         <div>
           <h2>法术位管理</h2>
-          <p>已准备法术 <strong>{{ preparedSpellCount }}</strong></p>
         </div>
         <div class="spell-panel-actions">
           <button class="primary-button" type="button" @click="restoreAllSlots">恢复全部法术位</button>
@@ -231,11 +238,21 @@ const adjustSlot = (level: number, delta: number) => {
     <section class="spell-list-panel">
       <header>
         <h2>法术列表</h2>
-        <button class="primary-button" type="button" @click="openSpellDialog()">添加法术</button>
+        <div class="spell-panel-actions">
+          <div class="spell-view-toggle" aria-label="法术看板模式">
+            <button type="button" :class="{ active: !isCompactSpellView }" @click="isCompactSpellView = false">正常</button>
+            <button type="button" :class="{ active: isCompactSpellView }" @click="isCompactSpellView = true">简约</button>
+          </div>
+          <button class="primary-button" type="button" @click="openSpellDialog()">添加法术</button>
+        </div>
       </header>
 
       <div class="spell-filter-row">
         <button type="button" :class="{ active: activeSpellLevel === -1 }" @click="activeSpellLevel = -1">全部</button>
+        <button type="button" :class="{ active: activeSpellLevel === -2 }" @click="activeSpellLevel = -2">
+          已准备法术
+          <span>{{ preparedSpellCount }}</span>
+        </button>
         <button
           v-for="level in spellLevels"
           :key="level"
@@ -247,7 +264,24 @@ const adjustSlot = (level: number, delta: number) => {
         </button>
       </div>
 
-      <div v-if="filteredSpells.length > 0" class="spell-card-grid">
+      <div v-if="filteredSpells.length > 0 && isCompactSpellView" class="spell-compact-grid">
+        <article
+          v-for="spell in filteredSpells"
+          :key="spell.id"
+          class="spell-compact-card"
+          :class="{ prepared: spell.level > 0 && spell.prepared }"
+        >
+          <button class="spell-compact-name" type="button" @click="openSpellDialog(spell.id)">
+            {{ spell.name }}
+          </button>
+          <button v-if="spell.level > 0" class="spell-compact-status" type="button" @click="togglePrepared(spell.id)">
+            {{ getSpellPreparedStatus(spell.level, spell.prepared) }}
+          </button>
+          <span v-else class="spell-compact-status static">{{ getSpellPreparedStatus(spell.level, spell.prepared) }}</span>
+        </article>
+      </div>
+
+      <div v-else-if="filteredSpells.length > 0" class="spell-card-grid">
         <article v-for="spell in filteredSpells" :key="spell.id" class="spell-card" :class="{ prepared: spell.level > 0 && spell.prepared }">
           <header>
             <div>

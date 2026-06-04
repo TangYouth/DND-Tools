@@ -940,8 +940,36 @@ h1 {
 .spell-panel-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.spell-view-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.34);
+}
+
+.spell-view-toggle button {
+  min-width: 64px;
+  border: 0;
+  color: #4a3d30;
+  background: transparent;
+  font-weight: 700;
+}
+
+.spell-view-toggle button + button {
+  border-left: 1px solid rgba(216, 201, 181, 0.86);
+}
+
+.spell-view-toggle button.active {
+  color: #6d4e20;
+  background: #f2d6a5;
 }
 
 .spell-slot-grid {
@@ -1019,10 +1047,84 @@ h1 {
   background: #f2d6a5;
 }
 
+.spell-filter-row button span {
+  display: inline-grid;
+  min-width: 22px;
+  min-height: 22px;
+  margin-left: 6px;
+  place-items: center;
+  border-radius: 999px;
+  color: #fff9ec;
+  background: #8a642f;
+  font-size: 13px;
+}
+
 .spell-card-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(280px, 1fr));
   gap: 14px;
+}
+
+.spell-compact-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.spell-compact-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 58px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.spell-compact-card.prepared {
+  border-color: rgba(138, 100, 47, 0.62);
+  background: rgba(255, 250, 241, 0.74);
+}
+
+.spell-compact-name,
+.spell-compact-status {
+  border: 0;
+  background: transparent;
+}
+
+.spell-compact-name {
+  overflow: hidden;
+  padding: 0;
+  color: var(--ink);
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.spell-compact-status {
+  min-width: 76px;
+  min-height: 34px;
+  border: 1px solid rgba(216, 201, 181, 0.86);
+  border-radius: 7px;
+  color: #8a642f;
+  background: rgba(255, 255, 255, 0.42);
+  font-weight: 700;
+}
+
+.spell-compact-status.static {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.spell-compact-card.prepared .spell-compact-status {
+  border-color: rgba(138, 100, 47, 0.34);
+  color: #fff9ec;
+  background: #8a642f;
 }
 
 .spell-card {
@@ -2721,6 +2823,7 @@ textarea {
 
   .spell-slot-grid,
   .spell-card-grid,
+  .spell-compact-grid,
   .custom-resource-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
@@ -2823,6 +2926,7 @@ textarea {
   .trait-grid,
   .spell-slot-grid,
   .spell-card-grid,
+  .spell-compact-grid,
   .custom-resource-grid,
   .hit-die-card,
   .resource-dialog-grid,
