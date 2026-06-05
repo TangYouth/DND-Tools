@@ -7,10 +7,13 @@ const {
   characters,
   selectedCharacter,
   storageLocationLabel,
+  storageStatus,
+  importInput,
   selectCharacter,
   resetCreationDraft,
   chooseStorageFile,
   importCharactersFromFile,
+  importJson,
   getCharacterClassSummary,
 } = useCharacters()
 
@@ -53,6 +56,8 @@ const createCharacter = () => {
       <div class="sidebar-footer">
         <button type="button" @click="importCharactersFromFile">导入角色</button>
         <button type="button" :title="storageLocationLabel" @click="chooseStorageFile">存储路径</button>
+        <input ref="importInput" class="visually-hidden-input" type="file" accept="application/json,.json" @change="importJson" />
+        <small>{{ storageStatus }}</small>
       </div>
     </aside>
 

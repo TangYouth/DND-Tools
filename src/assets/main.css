@@ -218,6 +218,20 @@ button {
   text-align: left;
 }
 
+.sidebar-footer small {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.visually-hidden-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .workspace {
   padding: 30px 34px 40px;
 }

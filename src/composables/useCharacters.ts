@@ -1059,7 +1059,7 @@ const chooseStorageFile = async () => {
 
 const importCharactersFromFile = async () => {
   if (!window.showOpenFilePicker) {
-    storageStatus.value = '当前浏览器不支持从本机文件导入'
+    importInput.value?.click()
     return
   }
 
@@ -1125,10 +1125,13 @@ const importJson = async (event: Event) => {
   try {
     parsed = parseCharactersJson(text)
   } catch {
+    storageStatus.value = '导入角色失败，请确认 JSON 格式'
+    target.value = ''
     return
   }
 
-  mergeImportedCharacters(parsed)
+  const importedCharacters = mergeImportedCharacters(parsed)
+  storageStatus.value = `已导入 ${importedCharacters.length} 个角色`
   target.value = ''
 }
 
