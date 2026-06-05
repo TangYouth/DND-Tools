@@ -150,6 +150,7 @@ const canAttune = (itemId: string) => {
   <section v-if="!selectedCharacter" class="panel empty-board-panel">
     <p class="eyebrow">人物看板</p>
     <h1>暂无角色</h1>
+    <p style="color: red;">请务必确认左下角存储路径是否正确。Chrome/Edge 浏览器下可以自行选择存储路径。Firefox/Safari 浏览器下默认存储在浏览器本地存储中。</p>
     <p>可以从左侧新建角色，或导入一个角色 JSON 文件。</p>
   </section>
 

@@ -246,6 +246,7 @@ const STORAGE_KEY = 'dnd-tools.character-board.v1'
 const STORAGE_DB_NAME = 'dnd-tools.storage'
 const STORAGE_DB_STORE = 'settings'
 const STORAGE_HANDLE_KEY = 'charactersDirectoryHandle'
+const OPFS_STORAGE_LABEL = '浏览器私有存储'
 const CUSTOM_OPTION = characterCreationConfig.customOption
 const abilityDefinitions: Array<{ key: AbilityKey; label: string; short: string }> = [
   { key: 'str', label: '力量', short: 'STR' },
@@ -773,8 +774,9 @@ const isEditing = ref(false)
 const creationStep = ref(0)
 const importInput = ref<HTMLInputElement | null>(null)
 const storageDirectoryHandle = ref<FileSystemDirectoryHandle | null>(null)
+const storageMode = ref<'directory' | 'opfs' | 'none'>('none')
 const storageLocationLabel = ref('未选择本机存储目录')
-const storageStatus = ref('可点击“存储路径”选择本机角色目录')
+const storageStatus = ref(canUseLocalFileStorage() ? '可点击“存储路径”选择本机角色目录' : '正在准备浏览器私有存储')
 const isStorageReady = ref(false)
 const isWritingStorage = ref(false)
 const creationDraft = reactive<CharacterDraft>({
@@ -854,7 +856,9 @@ const writeStorageSetting = async (key: string, value: unknown) => {
   })
 }
 
-const canUseLocalFileStorage = () => Boolean(window.showOpenFilePicker && window.showDirectoryPicker)
+function canUseLocalFileStorage() {
+  return Boolean(window.showOpenFilePicker && window.showDirectoryPicker)
+}
 
 const requestFilePermission = async (handle: FileSystemHandle, mode: FileSystemPermissionMode) => {
   if (!handle.queryPermission || !handle.requestPermission) return true
@@ -895,24 +899,29 @@ const persistCharacters = async () => {
 
   try {
     isWritingStorage.value = true
-    const canWrite = await requestFilePermission(storageDirectoryHandle.value, 'readwrite')
-    if (!canWrite) {
-      storageStatus.value = '没有本机目录写入权限'
-      return
+    if (storageMode.value === 'directory') {
+      const canWrite = await requestFilePermission(storageDirectoryHandle.value, 'readwrite')
+      if (!canWrite) {
+        storageStatus.value = '没有本机目录写入权限'
+        return
+      }
     }
 
     await Promise.all(characters.value.map((character) => writeCharacterFile(character)))
-    storageStatus.value = `已保存到 ${storageDirectoryHandle.value.name}`
+    storageStatus.value =
+      storageMode.value === 'opfs' ? `已保存到${OPFS_STORAGE_LABEL}` : `已保存到 ${storageDirectoryHandle.value.name}`
   } catch {
-    storageStatus.value = '保存到本机目录失败'
+    storageStatus.value = storageMode.value === 'opfs' ? `保存到${OPFS_STORAGE_LABEL}失败` : '保存到本机目录失败'
   } finally {
     isWritingStorage.value = false
   }
 }
 
-const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle) => {
-  const canRead = await requestFilePermission(handle, 'read')
-  if (!canRead) return false
+const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle, mode: 'directory' | 'opfs') => {
+  if (mode === 'directory') {
+    const canRead = await requestFilePermission(handle, 'read')
+    if (!canRead) return false
+  }
 
   const parsedCharacters: Character[] = []
   for await (const entry of handle.values()) {
@@ -926,23 +935,42 @@ const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle) =>
   const uniqueCharacters = Array.from(new Map(parsedCharacters.map((character) => [character.id, character])).values())
 
   storageDirectoryHandle.value = handle
-  storageLocationLabel.value = handle.name
+  storageMode.value = mode
+  storageLocationLabel.value = mode === 'opfs' ? OPFS_STORAGE_LABEL : handle.name
   storageStatus.value =
-    uniqueCharacters.length > 0 ? `已从 ${handle.name} 读取 ${uniqueCharacters.length} 个角色` : `已连接 ${handle.name}，当前没有角色`
+    uniqueCharacters.length > 0
+      ? `已从 ${mode === 'opfs' ? OPFS_STORAGE_LABEL : handle.name} 读取 ${uniqueCharacters.length} 个角色`
+      : `已连接${mode === 'opfs' ? OPFS_STORAGE_LABEL : ` ${handle.name}`}，当前没有角色`
   characters.value = uniqueCharacters
   selectedId.value = uniqueCharacters[0]?.id ?? ''
+  return true
+}
+
+const initializeOpfsStorage = async () => {
+  if (!navigator.storage.getDirectory) {
+    storageMode.value = 'none'
+    storageStatus.value = '当前浏览器不支持本机目录或 OPFS 存储'
+    return false
+  }
+
+  const handle = await navigator.storage.getDirectory()
+  await loadCharactersFromDirectory(handle, 'opfs')
   return true
 }
 
 const initializeCharacterStorage = async () => {
   try {
     window.localStorage.removeItem(STORAGE_KEY)
-    const savedHandle = await readStorageSetting<FileSystemDirectoryHandle>(STORAGE_HANDLE_KEY)
-    if (savedHandle) {
-      await loadCharactersFromDirectory(savedHandle)
+    if (canUseLocalFileStorage()) {
+      const savedHandle = await readStorageSetting<FileSystemDirectoryHandle>(STORAGE_HANDLE_KEY)
+      if (savedHandle) {
+        await loadCharactersFromDirectory(savedHandle, 'directory')
+      }
+    } else {
+      await initializeOpfsStorage()
     }
   } catch {
-    storageStatus.value = '读取本机存储设置失败'
+    storageStatus.value = canUseLocalFileStorage() ? '读取本机存储设置失败' : `读取${OPFS_STORAGE_LABEL}失败`
   } finally {
     isStorageReady.value = true
   }
@@ -1034,7 +1062,9 @@ const mergeImportedCharacters = (importedCharacters: Character[]) => {
 
 const chooseStorageFile = async () => {
   if (!window.showDirectoryPicker) {
-    storageStatus.value = '当前浏览器不支持选择本机存储目录'
+    void initializeOpfsStorage().then((ready) => {
+      if (ready) storageStatus.value = `当前浏览器使用${OPFS_STORAGE_LABEL}保存角色，可通过导出下载备份`
+    })
     return
   }
 
@@ -1043,9 +1073,10 @@ const chooseStorageFile = async () => {
     const currentCharacters = [...characters.value]
     const currentSelectedId = selectedId.value
     storageDirectoryHandle.value = handle
+    storageMode.value = 'directory'
     storageLocationLabel.value = handle.name
     await writeStorageSetting(STORAGE_HANDLE_KEY, handle)
-    const loaded = await loadCharactersFromDirectory(handle)
+    const loaded = await loadCharactersFromDirectory(handle, 'directory')
     if ((!loaded || characters.value.length === 0) && currentCharacters.length > 0) {
       characters.value = currentCharacters
       selectedId.value = currentSelectedId || currentCharacters[0]?.id || ''
