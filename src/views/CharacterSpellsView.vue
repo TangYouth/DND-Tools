@@ -296,9 +296,6 @@ const adjustSlot = (level: number, delta: number) => {
               <h3>{{ spell.name }}</h3>
               <p>{{ getSpellLevelLabel(spell.level) }} · {{ spell.school }}</p>
             </div>
-            <button v-if="spell.level > 0" class="plain-button" type="button" @click="togglePrepared(spell.id)">
-              {{ getPreparedLabel(spell.prepared) }}
-            </button>
           </header>
 
           <dl class="spell-meta-grid">
@@ -321,6 +318,9 @@ const adjustSlot = (level: number, delta: number) => {
           </dl>
 
           <p class="spell-description" :title="spell.description || '暂无描述。'">{{ spell.description || '暂无描述。' }}</p>
+          <button v-if="spell.level > 0" class="plain-button spell-prepared-action" type="button" @click="togglePrepared(spell.id)">
+            {{ getPreparedLabel(spell.prepared) }}
+          </button>
         </article>
       </div>
       <div v-else class="trait-empty">当前筛选下没有法术，点击右上角添加。</div>
