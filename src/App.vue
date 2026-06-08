@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { RouterLink, RouterView, useRouter } from 'vue-router'
+import { ref } from 'vue'
+import { RouterView, useRouter } from 'vue-router'
+import DiceDrawer from './components/DiceDrawer.vue'
 import { useCharacters } from './composables/useCharacters'
 
 const router = useRouter()
@@ -17,6 +19,8 @@ const {
   getCharacterClassSummary,
 } = useCharacters()
 
+const diceDrawer = ref<InstanceType<typeof DiceDrawer> | null>(null)
+
 const openCharacter = (id: string) => {
   selectCharacter(id)
   router.push({ name: 'characters' })
@@ -25,6 +29,10 @@ const openCharacter = (id: string) => {
 const createCharacter = () => {
   resetCreationDraft()
   router.push({ name: 'character-create' })
+}
+
+const openDicePanel = () => {
+  diceDrawer.value?.open()
 }
 </script>
 
@@ -54,7 +62,9 @@ const createCharacter = () => {
       </div>
 
       <div class="sidebar-footer">
-        <button type="button" >骰子工具</button>
+        <button type="button" @click="openDicePanel">
+          骰子工具
+        </button>
         <button type="button" @click="importCharactersFromFile">导入角色</button>
         <button type="button" :title="storageLocationLabel" @click="chooseStorageFile">存储路径</button>
         <input ref="importInput" class="visually-hidden-input" type="file" accept="application/json,.json" @change="importJson" />
@@ -65,5 +75,7 @@ const createCharacter = () => {
     <main class="workspace">
       <RouterView />
     </main>
+
+    <DiceDrawer ref="diceDrawer" />
   </div>
 </template>
