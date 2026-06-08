@@ -212,6 +212,10 @@ const removeResource = (resourceId: string) => {
 
       <div v-if="selectedCharacter.resources.length > 0" class="custom-resource-grid">
         <article v-for="resource in selectedCharacter.resources" :key="resource.id" class="custom-resource-card">
+          <div class="trait-card-actions">
+            <button class="plain-button" type="button" @click="openResourceDialog(resource.id)">编辑</button>
+            <button class="danger-button" type="button" @click="removeResource(resource.id)">删除</button>
+          </div>
           <div class="custom-resource-icon">✦</div>
           <h3>{{ resource.name }}</h3>
           <strong>{{ resource.current }} / {{ resource.max }}</strong>
@@ -220,17 +224,13 @@ const removeResource = (resourceId: string) => {
             <b>{{ resource.current }}</b>
             <button type="button" @click="adjustCustomResource(resource.id, 1)">＋</button>
           </div>
-          <footer>
-            <button class="plain-button" type="button" @click="openResourceDialog(resource.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeResource(resource.id)">删除</button>
-          </footer>
         </article>
       </div>
       <div v-else class="trait-empty">当前角色暂无自定义资源。</div>
     </section>
 
     <Teleport to="body">
-      <div v-if="isHitDieDialogOpen" class="trait-dialog-backdrop" @click.self="closeHitDieDialog">
+      <div v-if="isHitDieDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog resource-dialog" @submit.prevent="saveHitDie">
           <header>
             <div>
@@ -256,7 +256,7 @@ const removeResource = (resourceId: string) => {
     </Teleport>
 
     <Teleport to="body">
-      <div v-if="isResourceDialogOpen" class="trait-dialog-backdrop" @click.self="closeResourceDialog">
+      <div v-if="isResourceDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog resource-dialog" @submit.prevent="saveResource">
           <header>
             <div>

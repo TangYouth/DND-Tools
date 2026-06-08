@@ -404,7 +404,7 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
     </section>
 
     <Teleport to="body">
-      <div v-if="isHpQuickEditOpen" class="hp-dialog-backdrop" @click.self="closeHpQuickEdit">
+      <div v-if="isHpQuickEditOpen" class="hp-dialog-backdrop">
         <section class="hp-dialog" role="dialog" aria-modal="true" aria-labelledby="hp-dialog-title">
           <header>
             <div>

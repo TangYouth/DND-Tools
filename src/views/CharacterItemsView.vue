@@ -224,6 +224,10 @@ const canAttune = (itemId: string) => {
 
       <div class="item-card-grid">
         <article v-for="item in equipmentItems" :key="item.id" class="inventory-item-card" :class="{ attuned: item.attuned }">
+          <div class="trait-card-actions">
+            <button class="plain-button" type="button" @click="openItemDialog('equipment', item.id)">编辑</button>
+            <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
+          </div>
           <div class="item-card-icon">{{ item.name.slice(0, 1) }}</div>
           <div class="item-card-body">
             <h3>{{ item.name }}</h3>
@@ -241,8 +245,6 @@ const canAttune = (itemId: string) => {
             >
               {{ item.attuned ? '已同调' : '点击同调' }}
             </button>
-            <button class="icon-button" type="button" aria-label="编辑物品" @click="openItemDialog('equipment', item.id)">✎</button>
-            <button class="icon-button danger-icon-button" type="button" aria-label="删除物品" @click="removeItem(item.id)">×</button>
           </footer>
         </article>
 
@@ -259,6 +261,10 @@ const canAttune = (itemId: string) => {
 
       <div class="item-card-grid">
         <article v-for="item in backpackItems" :key="item.id" class="inventory-item-card" :class="{ attuned: item.attuned }">
+          <div class="trait-card-actions">
+            <button class="plain-button" type="button" @click="openItemDialog('backpack', item.id)">编辑</button>
+            <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
+          </div>
           <div class="item-card-icon">{{ item.name.slice(0, 1) }}</div>
           <div class="item-card-body">
             <h3>{{ item.name }}</h3>
@@ -276,8 +282,6 @@ const canAttune = (itemId: string) => {
             >
               {{ item.attuned ? '已同调' : '点击同调' }}
             </button>
-            <button class="icon-button" type="button" aria-label="编辑物品" @click="openItemDialog('backpack', item.id)">✎</button>
-            <button class="icon-button danger-icon-button" type="button" aria-label="删除物品" @click="removeItem(item.id)">×</button>
           </footer>
         </article>
 
@@ -290,7 +294,7 @@ const canAttune = (itemId: string) => {
     </section>
 
     <Teleport to="body">
-      <div v-if="isItemDialogOpen" class="trait-dialog-backdrop" @click.self="closeItemDialog">
+      <div v-if="isItemDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog item-dialog" @submit.prevent="saveItem">
           <header>
             <div>

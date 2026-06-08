@@ -801,8 +801,16 @@ h1 {
   background: rgba(255, 255, 255, 0.42);
 }
 
-.trait-card:hover .trait-card-actions {
+.trait-card:hover .trait-card-actions,
+.trait-card:focus-within .trait-card-actions,
+.spell-card:hover .trait-card-actions,
+.spell-card:focus-within .trait-card-actions,
+.custom-resource-card:hover .trait-card-actions,
+.custom-resource-card:focus-within .trait-card-actions,
+.inventory-item-card:hover .trait-card-actions,
+.inventory-item-card:focus-within .trait-card-actions {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .trait-card-actions {
@@ -812,6 +820,7 @@ h1 {
   display: flex;
   gap: 8px;
   opacity: 0;
+  pointer-events: none;
   transition: opacity 160ms ease;
 }
 
@@ -1143,6 +1152,7 @@ h1 {
 }
 
 .spell-card {
+  position: relative;
   display: grid;
   gap: 12px;
   align-content: start;
@@ -1158,12 +1168,12 @@ h1 {
   background: rgba(255, 250, 241, 0.74);
 }
 
-.spell-card > header,
-.spell-card > footer {
+.spell-card > header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 12px;
+  padding-right: 112px;
 }
 
 .spell-card h3 {
@@ -1446,6 +1456,7 @@ h1 {
 
 .custom-resource-card h3 {
   margin: 0;
+  padding-right: 112px;
   font-size: 22px;
 }
 
@@ -1453,28 +1464,6 @@ h1 {
   grid-column: 1 / -1;
   justify-self: center;
   margin-top: 4px;
-}
-
-.custom-resource-card footer {
-  position: absolute;
-  right: 14px;
-  bottom: 14px;
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(4px);
-  transition:
-    opacity 160ms ease,
-    transform 160ms ease;
-}
-
-.custom-resource-card:hover footer,
-.custom-resource-card:focus-within footer {
-  opacity: 1;
-  pointer-events: auto;
-  transform: translateY(0);
 }
 
 .add-resource-card {
@@ -1663,6 +1652,7 @@ h1 {
 }
 
 .inventory-item-card {
+  position: relative;
   display: grid;
   grid-template-columns: 72px minmax(0, 1fr);
   gap: 12px 14px;
@@ -1694,6 +1684,7 @@ h1 {
 .item-card-body h3 {
   overflow: hidden;
   margin: 0 0 4px;
+  padding-right: 112px;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 19px;
@@ -2100,6 +2091,17 @@ h1 {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.creature-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.creature-card-actions button {
+  min-height: 30px;
+  padding: 0 10px;
+  font-size: 13px;
 }
 
 .creature-ability-grid {
@@ -3720,21 +3722,27 @@ textarea {
   .trait-card-actions {
     position: static;
     opacity: 1;
+    pointer-events: auto;
   }
 
-  .trait-card h3 {
+  .trait-card h3,
+  .spell-card h3,
+  .custom-resource-card h3,
+  .item-card-body h3 {
     padding-right: 0;
   }
 
   .spell-panel-actions,
   .spell-card > header,
-  .spell-card > footer,
   .adventure-log-card,
   .creature-detail-actions,
-  .creature-hp-actions,
-  .custom-resource-card footer {
+  .creature-hp-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .spell-card > header {
+    padding-right: 0;
   }
 
   .adventure-log-card {

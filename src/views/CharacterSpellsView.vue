@@ -287,6 +287,10 @@ const adjustSlot = (level: number, delta: number) => {
 
       <div v-else-if="filteredSpells.length > 0" class="spell-card-grid">
         <article v-for="spell in filteredSpells" :key="spell.id" class="spell-card" :class="{ prepared: spell.level > 0 && spell.prepared }">
+          <div class="trait-card-actions">
+            <button class="plain-button" type="button" @click="openSpellDialog(spell.id)">编辑</button>
+            <button class="danger-button" type="button" @click="removeSpell(spell.id)">删除</button>
+          </div>
           <header>
             <div>
               <h3>{{ spell.name }}</h3>
@@ -317,17 +321,13 @@ const adjustSlot = (level: number, delta: number) => {
           </dl>
 
           <p class="spell-description" :title="spell.description || '暂无描述。'">{{ spell.description || '暂无描述。' }}</p>
-          <footer>
-            <button class="plain-button" type="button" @click="openSpellDialog(spell.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeSpell(spell.id)">删除</button>
-          </footer>
         </article>
       </div>
       <div v-else class="trait-empty">当前筛选下没有法术，点击右上角添加。</div>
     </section>
 
     <Teleport to="body">
-      <div v-if="isSlotEditorOpen" class="trait-dialog-backdrop" @click.self="closeSlotEditor">
+      <div v-if="isSlotEditorOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog spell-slot-dialog" @submit.prevent="saveSlots">
           <header>
             <div>
@@ -353,7 +353,7 @@ const adjustSlot = (level: number, delta: number) => {
     </Teleport>
 
     <Teleport to="body">
-      <div v-if="isSpellDialogOpen" class="trait-dialog-backdrop" @click.self="closeSpellDialog">
+      <div v-if="isSpellDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog spell-dialog" @submit.prevent="saveSpell">
           <header>
             <div>

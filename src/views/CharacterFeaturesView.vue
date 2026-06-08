@@ -154,7 +154,7 @@ const removeTrait = (kind: TraitKind, traitId: string) => {
     </section>
 
     <Teleport to="body">
-      <div v-if="isTraitDialogOpen" class="trait-dialog-backdrop" @click.self="closeTraitDialog">
+      <div v-if="isTraitDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog" @submit.prevent="saveTrait">
           <header>
             <div>

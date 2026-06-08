@@ -170,7 +170,7 @@ const stopDraggingLog = () => {
     </section>
 
     <Teleport to="body">
-      <div v-if="isLogDialogOpen" class="trait-dialog-backdrop" @click.self="closeLogDialog">
+      <div v-if="isLogDialogOpen" class="trait-dialog-backdrop">
         <form class="trait-dialog adventure-log-dialog" @submit.prevent="saveLog">
           <header>
             <div>
