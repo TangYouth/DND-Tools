@@ -505,7 +505,8 @@ const normalizeHitDice = (classes: CharacterClassEntry[], entries: CharacterHitD
   return classes.map((classEntry) => {
     const existing = existingByClassId.get(classEntry.id) ?? existingByClassName.get(classEntry.className)
     const max = Math.max(1, Number(classEntry.level) || 1)
-    const current = Math.min(max, Math.max(0, Number(existing?.current) || max))
+    const existingCurrent = Number(existing?.current)
+    const current = Math.min(max, Math.max(0, Number.isFinite(existingCurrent) ? existingCurrent : max))
 
     return {
       id: existing?.id || crypto.randomUUID(),

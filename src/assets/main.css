@@ -1647,6 +1647,10 @@ h1 {
   color: var(--ink);
 }
 
+.resource-section-action {
+  margin-left: auto;
+}
+
 .resource-section-heading h3 {
   border-left: 3px solid #bc842c;
   padding-left: 12px;
@@ -1719,6 +1723,13 @@ h1 {
   color: var(--muted);
   font-size: 17px;
   font-weight: 700;
+}
+
+.hit-die-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
 }
 
 .resource-count-block {
@@ -1846,6 +1857,90 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 140px 140px;
   gap: 14px;
+}
+
+.hit-die-use-dialog {
+  width: min(620px, 100%);
+}
+
+.hit-die-use-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  overflow: hidden;
+  border: 1px solid rgba(216, 201, 181, 0.8);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.hit-die-use-summary div {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border-right: 1px solid rgba(216, 201, 181, 0.72);
+}
+
+.hit-die-use-summary div:last-child {
+  border-right: 0;
+}
+
+.hit-die-use-summary span {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.hit-die-use-summary strong {
+  color: var(--ink);
+  font-size: 24px;
+}
+
+.hit-die-use-controls {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: end;
+}
+
+.hit-die-roll-panel {
+  display: grid;
+  gap: 14px;
+  place-items: center;
+  min-height: 128px;
+  border: 1px dashed rgba(180, 139, 83, 0.7);
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(255, 248, 236, 0.58);
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.hit-die-roll-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.hit-die-roll-list b {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(188, 132, 44, 0.38);
+  border-radius: 8px;
+  color: #7d4f16;
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 22px;
+  box-shadow: 0 8px 20px rgba(68, 45, 20, 0.08);
+}
+
+.hit-die-roll-panel.rolling .hit-die-roll-list b {
+  animation: dice-roll-tick 90ms ease-in-out infinite alternate;
+}
+
+.hit-die-roll-panel > strong {
+  color: var(--ink);
+  font-size: 22px;
 }
 
 .item-management-panel {
@@ -4175,6 +4270,25 @@ textarea {
   .gold-editor-card,
   .attunement-status-card {
     justify-items: stretch;
+  }
+
+  .hit-die-actions,
+  .hit-die-use-controls,
+  .hit-die-use-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .hit-die-actions {
+    justify-content: stretch;
+  }
+
+  .hit-die-use-summary div {
+    border-right: 0;
+    border-bottom: 1px solid rgba(216, 201, 181, 0.72);
+  }
+
+  .hit-die-use-summary div:last-child {
+    border-bottom: 0;
   }
 
   .gold-quick-controls,

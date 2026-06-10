@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onUnmounted, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
 import hitDieIcon from '../components/icons/shengmingtou.png'
@@ -15,23 +15,43 @@ const {
   exportSelectedCharacter,
   getCharacterClassSummary,
   createCustomResource,
+  modifier,
 } = useCharacters()
 
 const editingHitDieId = ref('')
 const editingResourceId = ref('')
+const usingHitDieId = ref('')
 const isHitDieDialogOpen = ref(false)
+const isHitDieUseDialogOpen = ref(false)
 const isResourceDialogOpen = ref(false)
+const isRollingHitDice = ref(false)
+const hitDieRollResults = ref<number[]>([])
+const displayedHitDieRollResults = ref<number[]>([])
 const hitDieDraft = reactive({
   die: 'D8',
+})
+const hitDieUseDraft = reactive({
+  count: 1,
 })
 const resourceDraft = reactive({
   name: '',
   current: 0,
   max: 0,
 })
+let hitDieRollInterval: ReturnType<typeof window.setInterval> | undefined
+let hitDieRollTimeout: ReturnType<typeof window.setTimeout> | undefined
 
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const resourceDialogTitle = computed(() => `${editingResourceId.value ? '编辑' : '添加'}资源`)
+const usingHitDieResource = computed(() => form.hitDice.find((item) => item.id === usingHitDieId.value))
+const constitutionModifier = computed(() => {
+  const constitution = form.abilities.find((ability) => ability.key === 'con')
+  return modifier(constitution?.score ?? 10)
+})
+const hitDieRecoveryTotal = computed(() => {
+  return hitDieRollResults.value.reduce((total, roll) => total + Math.max(0, roll + constitutionModifier.value), 0)
+})
+const canConfirmHitDieUse = computed(() => !isRollingHitDice.value && hitDieRollResults.value.length > 0)
 
 const deleteCurrentCharacter = () => {
   if (!selectedCharacter.value) return
@@ -81,6 +101,82 @@ const saveHitDie = () => {
   editingHitDieId.value = ''
   isHitDieDialogOpen.value = false
 }
+
+const getHitDieSides = (die: string) => Math.max(1, Number.parseInt(die.replace(/\D/g, ''), 10) || 8)
+
+const clearHitDieRollAnimation = () => {
+  if (hitDieRollInterval) window.clearInterval(hitDieRollInterval)
+  if (hitDieRollTimeout) window.clearTimeout(hitDieRollTimeout)
+  hitDieRollInterval = undefined
+  hitDieRollTimeout = undefined
+  isRollingHitDice.value = false
+}
+
+const rollHitDieResults = (count: number, sides: number) => {
+  return Array.from({ length: count }, () => Math.floor(Math.random() * sides) + 1)
+}
+
+const openHitDieUseDialog = (resourceId: string) => {
+  syncForm()
+  const resource = form.hitDice.find((item) => item.id === resourceId)
+  if (!resource) return
+  clearHitDieRollAnimation()
+  usingHitDieId.value = resourceId
+  hitDieUseDraft.count = Math.min(1, Math.max(0, resource.current))
+  hitDieRollResults.value = []
+  displayedHitDieRollResults.value = []
+  isHitDieUseDialogOpen.value = true
+}
+
+const closeHitDieUseDialog = () => {
+  syncForm()
+  clearHitDieRollAnimation()
+  usingHitDieId.value = ''
+  hitDieRollResults.value = []
+  displayedHitDieRollResults.value = []
+  isHitDieUseDialogOpen.value = false
+}
+
+const startHitDieRoll = () => {
+  const resource = usingHitDieResource.value
+  if (!resource || resource.current <= 0) return
+
+  const count = Math.min(resource.current, Math.max(1, Number(hitDieUseDraft.count) || 1))
+  const sides = getHitDieSides(resource.die)
+  hitDieUseDraft.count = count
+  hitDieRollResults.value = []
+  displayedHitDieRollResults.value = rollHitDieResults(count, sides)
+  clearHitDieRollAnimation()
+  isRollingHitDice.value = true
+
+  hitDieRollInterval = window.setInterval(() => {
+    displayedHitDieRollResults.value = rollHitDieResults(count, sides)
+  }, 90)
+
+  hitDieRollTimeout = window.setTimeout(() => {
+    clearHitDieRollAnimation()
+    const finalResults = rollHitDieResults(count, sides)
+    hitDieRollResults.value = finalResults
+    displayedHitDieRollResults.value = finalResults
+  }, 1000)
+}
+
+const confirmHitDieUse = () => {
+  const resource = usingHitDieResource.value
+  if (!resource || !canConfirmHitDieUse.value) return
+  const usedCount = Math.min(resource.current, hitDieRollResults.value.length)
+  const healing = Math.max(0, hitDieRecoveryTotal.value)
+
+  resource.current = Math.max(0, resource.current - usedCount)
+  form.hp.current = Math.min(form.hp.max, form.hp.current + healing)
+  saveForm()
+  usingHitDieId.value = ''
+  hitDieRollResults.value = []
+  displayedHitDieRollResults.value = []
+  isHitDieUseDialogOpen.value = false
+}
+
+onUnmounted(clearHitDieRollAnimation)
 
 const adjustCustomResource = (resourceId: string, delta: number) => {
   syncForm()
@@ -200,14 +296,17 @@ const removeResource = (resourceId: string) => {
               <button type="button" @click="adjustHitDie(resource.id, 1)">＋</button>
             </div>
           </div>
-          <button class="plain-button" type="button" @click="openHitDieDialog(resource.id)">编辑</button>
+          <div class="hit-die-actions">
+            <button class="primary-button" type="button" :disabled="resource.current <= 0" @click="openHitDieUseDialog(resource.id)">使用</button>
+            <button class="plain-button" type="button" @click="openHitDieDialog(resource.id)">编辑</button>
+          </div>
         </article>
       </div>
       <div v-else class="trait-empty">当前角色暂无职业生命骰。</div>
 
       <div class="resource-section-heading">
         <h3>自定义资源</h3>
-        <button class="plain-button" type="button" @click="openResourceDialog()">添加资源</button>
+        <button class="plain-button resource-section-action" type="button" @click="openResourceDialog()">添加资源</button>
       </div>
 
       <div v-if="selectedCharacter.resources.length > 0" class="custom-resource-grid">
@@ -250,6 +349,64 @@ const removeResource = (resourceId: string) => {
           <footer>
             <button class="plain-button" type="button" @click="closeHitDieDialog">取消</button>
             <button class="primary-button" type="submit">保存生命骰</button>
+          </footer>
+        </form>
+      </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <div v-if="isHitDieUseDialogOpen" class="trait-dialog-backdrop">
+        <form class="trait-dialog hit-die-use-dialog" @submit.prevent>
+          <header>
+            <div>
+              <p class="eyebrow">生命骰</p>
+              <h2>使用生命骰</h2>
+            </div>
+            <button class="icon-button" type="button" aria-label="关闭生命骰使用" @click="closeHitDieUseDialog">×</button>
+          </header>
+
+          <div class="hit-die-use-summary">
+            <div>
+              <span>当前血量</span>
+              <strong>{{ form.hp.current }} / {{ form.hp.max }}</strong>
+            </div>
+            <div>
+              <span>生命骰</span>
+              <strong>{{ usingHitDieResource?.current ?? 0 }} / {{ usingHitDieResource?.max ?? 0 }}</strong>
+            </div>
+            <div>
+              <span>体质调整值</span>
+              <strong>{{ constitutionModifier >= 0 ? `+${constitutionModifier}` : constitutionModifier }}</strong>
+            </div>
+          </div>
+
+          <div class="hit-die-use-controls">
+            <label>
+              使用数量
+              <el-input-number
+                v-model="hitDieUseDraft.count"
+                :min="1"
+                :max="Math.max(1, usingHitDieResource?.current ?? 1)"
+                controls-position="right"
+                :disabled="isRollingHitDice"
+              />
+            </label>
+            <button class="primary-button" type="button" :disabled="isRollingHitDice || !usingHitDieResource?.current" @click="startHitDieRoll">
+              开始投掷
+            </button>
+          </div>
+
+          <div class="hit-die-roll-panel" :class="{ rolling: isRollingHitDice }">
+            <span v-if="displayedHitDieRollResults.length === 0">选择数量后开始投掷。</span>
+            <div v-else class="hit-die-roll-list">
+              <b v-for="(roll, index) in displayedHitDieRollResults" :key="index">{{ roll }}</b>
+            </div>
+            <strong v-if="hitDieRollResults.length > 0">本次恢复 {{ hitDieRecoveryTotal }}</strong>
+          </div>
+
+          <footer>
+            <button class="plain-button" type="button" @click="closeHitDieUseDialog">取消</button>
+            <button class="primary-button" type="button" :disabled="!canConfirmHitDieUse" @click="confirmHitDieUse">确认恢复</button>
           </footer>
         </form>
       </div>
