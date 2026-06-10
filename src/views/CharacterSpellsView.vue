@@ -2,10 +2,32 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
+import spellConfig from '../composables/spellConfig.json'
 
 const spellLevels = Array.from({ length: 10 }, (_, level) => level)
 const spellSlotLevels = Array.from({ length: 9 }, (_, index) => index + 1)
 const spellSchools = ['防护学派', '咒法学派', '预言学派', '惑控学派', '塑能学派', '幻术学派', '死灵学派', '变化学派', '其他']
+interface SpellConfigEntry {
+  name: string
+  school: string
+  casting_time: string
+  cast_range: string
+  spell_components: string
+  duration: string
+  description: string
+}
+
+interface SpellOption {
+  id: string
+  name: string
+  level: number
+  school: string
+  castingTime: string
+  range: string
+  components: string
+  duration: string
+  description: string
+}
 
 const {
   selectedCharacter,
@@ -23,6 +45,7 @@ const isCompactSpellView = ref(false)
 const editingSpellId = ref('')
 const isSpellDialogOpen = ref(false)
 const isSlotEditorOpen = ref(false)
+const selectedSpellConfigId = ref('')
 const spellDraft = reactive({
   name: '',
   level: 0,
@@ -33,10 +56,36 @@ const spellDraft = reactive({
   duration: '',
   description: '',
   prepared: false,
+  useCustom: false,
 })
 
+const parseSpellLevelFromGroup = (groupKey: string) => {
+  if (groupKey === 'cantrip') return 0
+  const level = Number.parseInt(groupKey, 10)
+  return Number.isInteger(level) ? Math.min(9, Math.max(0, level)) : 0
+}
+
+const spellConfigOptions = computed<SpellOption[]>(() => {
+  return Object.entries(spellConfig as Record<string, SpellConfigEntry[]>).flatMap(([groupKey, entries]) => {
+    const level = parseSpellLevelFromGroup(groupKey)
+    return entries.map((entry, index) => ({
+      id: `${groupKey}-${index}-${entry.name}`,
+      name: entry.name,
+      level,
+      school: entry.school || '',
+      castingTime: entry.casting_time || '',
+      range: entry.cast_range || '',
+      components: entry.spell_components || '',
+      duration: entry.duration || '',
+      description: entry.description || '',
+    }))
+  })
+})
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const spellDialogTitle = computed(() => `${editingSpellId.value ? '编辑' : '添加'}法术`)
+const isSpellConfigMode = computed(() => !spellDraft.useCustom)
+const currentLevelSpellOptions = computed(() => spellConfigOptions.value.filter((spell) => spell.level === spellDraft.level))
+const canSaveSpell = computed(() => (isSpellConfigMode.value ? Boolean(selectedSpellConfigId.value) : Boolean(spellDraft.name.trim())))
 const preparedSpellCount = computed(() => selectedCharacter.value?.spells.filter((spell) => spell.level > 0 && spell.prepared).length ?? 0)
 const displaySlotLevels = computed(() => {
   if (!selectedCharacter.value) return []
@@ -77,6 +126,56 @@ const deleteCurrentCharacter = () => {
   deleteCharacter()
 }
 
+const findMatchingSpellOption = (spell: {
+  name: string
+  level: number
+  school: string
+  castingTime: string
+  range: string
+  components: string
+  duration: string
+  description: string
+}) => {
+  return spellConfigOptions.value.find(
+    (option) =>
+      option.name === spell.name &&
+      option.level === spell.level &&
+      option.school === spell.school &&
+      option.castingTime === spell.castingTime &&
+      option.range === spell.range &&
+      option.components === spell.components &&
+      option.duration === spell.duration &&
+      option.description === spell.description,
+  )
+}
+
+const clearSpellDraftDetails = () => {
+  spellDraft.name = ''
+  spellDraft.school = ''
+  spellDraft.castingTime = ''
+  spellDraft.range = ''
+  spellDraft.components = ''
+  spellDraft.duration = ''
+  spellDraft.description = ''
+}
+
+const applySpellConfigOption = (optionId: string) => {
+  const option = spellConfigOptions.value.find((item) => item.id === optionId)
+  if (!option) {
+    clearSpellDraftDetails()
+    return
+  }
+
+  spellDraft.name = option.name
+  spellDraft.level = option.level
+  spellDraft.school = option.school
+  spellDraft.castingTime = option.castingTime
+  spellDraft.range = option.range
+  spellDraft.components = option.components
+  spellDraft.duration = option.duration
+  spellDraft.description = option.description
+}
+
 const openSpellDialog = (spellId = '') => {
   syncForm()
   editingSpellId.value = spellId
@@ -90,6 +189,13 @@ const openSpellDialog = (spellId = '') => {
   spellDraft.duration = spell?.duration ?? ''
   spellDraft.description = spell?.description ?? ''
   spellDraft.prepared = spell?.prepared ?? false
+  selectedSpellConfigId.value = ''
+  spellDraft.useCustom = false
+  if (spell) {
+    const matchedOption = findMatchingSpellOption(spell)
+    selectedSpellConfigId.value = matchedOption?.id ?? ''
+    spellDraft.useCustom = !matchedOption
+  }
   isSpellDialogOpen.value = true
 }
 
@@ -100,6 +206,12 @@ const closeSpellDialog = () => {
 }
 
 const saveSpell = () => {
+  if (!canSaveSpell.value) return
+
+  if (isSpellConfigMode.value && selectedSpellConfigId.value) {
+    applySpellConfigOption(selectedSpellConfigId.value)
+  }
+
   const nextSpell = createSpellEntry(
     spellDraft.name.trim() || '未命名法术',
     spellDraft.level,
@@ -136,6 +248,28 @@ const removeSpell = (spellId: string) => {
   if (!window.confirm(`确定删除「${spell.name}」吗？`)) return
   form.spells = form.spells.filter((item) => item.id !== spellId)
   saveForm()
+}
+
+const handleSpellLevelChange = () => {
+  selectedSpellConfigId.value = ''
+  if (isSpellConfigMode.value) clearSpellDraftDetails()
+  if (spellDraft.level === 0) spellDraft.prepared = false
+}
+
+const handleSpellConfigSelectionChange = (optionId: string) => {
+  selectedSpellConfigId.value = optionId
+  applySpellConfigOption(optionId)
+}
+
+const handleSpellCustomModeChange = (useCustom: string | number | boolean) => {
+  spellDraft.useCustom = Boolean(useCustom)
+  if (!spellDraft.useCustom) {
+    if (selectedSpellConfigId.value) {
+      applySpellConfigOption(selectedSpellConfigId.value)
+    } else {
+      clearSpellDraftDetails()
+    }
+  }
 }
 
 const togglePrepared = (spellId: string) => {
@@ -365,36 +499,61 @@ const adjustSlot = (level: number, delta: number) => {
 
           <div class="spell-dialog-form">
             <label>
-              名称
-              <el-input v-model="spellDraft.name" placeholder="例如：火焰箭" />
-            </label>
-            <label>
               环阶
-              <el-select v-model="spellDraft.level" placeholder="选择环阶">
+              <el-select v-model="spellDraft.level" placeholder="选择环阶" @change="handleSpellLevelChange">
                 <el-option v-for="level in spellLevels" :key="level" :label="getSpellLevelLabel(level)" :value="level" />
               </el-select>
             </label>
             <label>
+              选择法术
+              <el-select
+                v-model="selectedSpellConfigId"
+                filterable
+                clearable
+                :disabled="spellDraft.useCustom"
+                placeholder="输入法术名或学派快速查找"
+                @change="handleSpellConfigSelectionChange"
+              >
+                <el-option
+                  v-for="spell in currentLevelSpellOptions"
+                  :key="spell.id"
+                  :label="`${spell.name} · ${spell.school}`"
+                  :value="spell.id"
+                >
+                  <span>{{ spell.name }}</span>
+                  <small>{{ spell.school }}</small>
+                </el-option>
+              </el-select>
+            </label>
+            <label class="checkbox-field spell-custom-field">
+              <el-checkbox v-model="spellDraft.useCustom" @change="handleSpellCustomModeChange" />
+              使用自定义法术
+            </label>
+            <label class="wide-field">
+              名称
+              <el-input v-model="spellDraft.name" :disabled="isSpellConfigMode" placeholder="例如：火焰箭" />
+            </label>
+            <label>
               学派
-              <el-select v-model="spellDraft.school" placeholder="选择学派">
+              <el-select v-model="spellDraft.school" :disabled="isSpellConfigMode" placeholder="选择学派">
                 <el-option v-for="school in spellSchools" :key="school" :label="school" :value="school" />
               </el-select>
             </label>
             <label>
               施法时间
-              <el-input v-model="spellDraft.castingTime" placeholder="例如：1 动作" />
+              <el-input v-model="spellDraft.castingTime" :disabled="isSpellConfigMode" placeholder="例如：1 动作" />
             </label>
             <label>
               施法距离
-              <el-input v-model="spellDraft.range" placeholder="例如：120 尺" />
+              <el-input v-model="spellDraft.range" :disabled="isSpellConfigMode" placeholder="例如：120 尺" />
             </label>
             <label>
               法术成分
-              <el-input v-model="spellDraft.components" placeholder="例如：V / S / M" />
+              <el-input v-model="spellDraft.components" :disabled="isSpellConfigMode" placeholder="例如：V / S / M" />
             </label>
             <label>
               持续时间
-              <el-input v-model="spellDraft.duration" placeholder="例如：瞬时" />
+              <el-input v-model="spellDraft.duration" :disabled="isSpellConfigMode" placeholder="例如：瞬时" />
             </label>
             <label v-if="spellDraft.level > 0" class="checkbox-field spell-prepared-field">
               <el-checkbox v-model="spellDraft.prepared" />
@@ -402,13 +561,19 @@ const adjustSlot = (level: number, delta: number) => {
             </label>
             <label class="wide-field">
               描述
-              <el-input v-model="spellDraft.description" type="textarea" :rows="6" placeholder="填写法术效果、伤害、豁免或特殊说明" />
+              <el-input
+                v-model="spellDraft.description"
+                type="textarea"
+                :rows="6"
+                :disabled="isSpellConfigMode"
+                placeholder="填写法术效果、伤害、豁免或特殊说明"
+              />
             </label>
           </div>
 
           <footer>
             <button class="plain-button" type="button" @click="closeSpellDialog">取消</button>
-            <button class="primary-button" type="submit">保存法术</button>
+            <button class="primary-button" type="submit" :disabled="!canSaveSpell">保存法术</button>
           </footer>
         </form>
       </div>
