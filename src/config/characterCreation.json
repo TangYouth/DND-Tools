@@ -47,6 +47,73 @@
     "邪术师",
     "法师"
   ],
+  "classHitDice": {
+    "野蛮人": {
+      "hitDie": "D12",
+      "firstLevelHpBase": 12,
+      "levelUpHpBase": 7
+    },
+    "战士": {
+      "hitDie": "D10",
+      "firstLevelHpBase": 10,
+      "levelUpHpBase": 6
+    },
+    "圣武士": {
+      "hitDie": "D10",
+      "firstLevelHpBase": 10,
+      "levelUpHpBase": 6
+    },
+    "游侠": {
+      "hitDie": "D10",
+      "firstLevelHpBase": 10,
+      "levelUpHpBase": 6
+    },
+    "吟游诗人": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "牧师": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "德鲁伊": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "武僧": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "游荡者": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "盗贼": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "邪术师": {
+      "hitDie": "D8",
+      "firstLevelHpBase": 8,
+      "levelUpHpBase": 5
+    },
+    "术士": {
+      "hitDie": "D6",
+      "firstLevelHpBase": 6,
+      "levelUpHpBase": 4
+    },
+    "法师": {
+      "hitDie": "D6",
+      "firstLevelHpBase": 6,
+      "levelUpHpBase": 4
+    }
+  },
   "genders": [
     "男",
     "女",
@@ -98,7 +165,7 @@
     "species": "人类",
     "className": "野蛮人",
     "level": 1,
-    "gender": "未说明",
+    "gender": "男",
     "alignment": "中立善良",
     "background": "侍僧",
     "size": "中型",

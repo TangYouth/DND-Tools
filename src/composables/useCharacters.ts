@@ -242,12 +242,24 @@ interface AbilityRoll {
   total: number
 }
 
+interface ClassHitDieRule {
+  hitDie: string
+  firstLevelHpBase: number
+  levelUpHpBase: number
+}
+
 const STORAGE_KEY = 'dnd-tools.character-board.v1'
 const STORAGE_DB_NAME = 'dnd-tools.storage'
 const STORAGE_DB_STORE = 'settings'
 const STORAGE_HANDLE_KEY = 'charactersDirectoryHandle'
 const OPFS_STORAGE_LABEL = '浏览器私有存储'
 const CUSTOM_OPTION = characterCreationConfig.customOption
+const DEFAULT_CLASS_HIT_DIE_RULE: ClassHitDieRule = {
+  hitDie: 'D8',
+  firstLevelHpBase: 8,
+  levelUpHpBase: 5,
+}
+const classHitDieRules = characterCreationConfig.classHitDice as Record<string, ClassHitDieRule>
 const abilityDefinitions: Array<{ key: AbilityKey; label: string; short: string }> = [
   { key: 'str', label: '力量', short: 'STR' },
   { key: 'dex', label: '敏捷', short: 'DEX' },
@@ -278,22 +290,60 @@ const skillDefinitions: Array<{ key: string; name: string; abilityKey: AbilityKe
   { key: 'persuasion', name: '说服', abilityKey: 'cha' },
 ]
 
-const classHitDieMap: Record<string, string> = {
-  野蛮人: 'D12',
-  吟游诗人: 'D8',
-  牧师: 'D8',
-  德鲁伊: 'D8',
-  战士: 'D10',
-  武僧: 'D8',
-  圣武士: 'D10',
-  游侠: 'D10',
-  游荡者: 'D8',
-  术士: 'D6',
-  邪术师: 'D8',
-  法师: 'D6',
+const calculateProficiencyBonus = (level: number) => 2 + Math.floor((Math.max(1, level) - 1) / 4)
+const modifier = (score: number) => Math.floor((score - 10) / 2)
+const signed = (value: number) => `${value >= 0 ? '+' : ''}${value}`
+
+const getClassHitDieRule = (className: string) => classHitDieRules[className] ?? DEFAULT_CLASS_HIT_DIE_RULE
+
+const getAbilityModifier = (scores: Record<AbilityKey, number>, key: AbilityKey) => modifier(scores[key] ?? 10)
+
+const calculateFixedHp = (classes: CharacterClassEntry[], abilityScores: Record<AbilityKey, number>) => {
+  const constitutionModifier = getAbilityModifier(abilityScores, 'con')
+  let hasFirstLevel = false
+
+  const totalHp = classes.reduce((total, classEntry) => {
+    const level = Math.max(1, Number(classEntry.level) || 1)
+    const rule = getClassHitDieRule(classEntry.className)
+    const firstLevelHp = hasFirstLevel ? 0 : rule.firstLevelHpBase + constitutionModifier
+    const levelUpCount = hasFirstLevel ? level : level - 1
+
+    hasFirstLevel = true
+    return total + firstLevelHp + levelUpCount * (rule.levelUpHpBase + constitutionModifier)
+  }, 0)
+
+  return Math.max(1, totalHp)
 }
 
-const calculateProficiencyBonus = (level: number) => 2 + Math.floor((Math.max(1, level) - 1) / 4)
+const calculateInitialCoreStats = (
+  classes: CharacterClassEntry[],
+  abilityScores: Record<AbilityKey, number>,
+  proficiency: number,
+) => {
+  const dexterityModifier = getAbilityModifier(abilityScores, 'dex')
+  const wisdomModifier = getAbilityModifier(abilityScores, 'wis')
+  const martialModifier = Math.max(getAbilityModifier(abilityScores, 'str'), dexterityModifier)
+  const spellcastingModifier = Math.max(
+    getAbilityModifier(abilityScores, 'int'),
+    wisdomModifier,
+    getAbilityModifier(abilityScores, 'cha'),
+  )
+  const hpMax = calculateFixedHp(classes, abilityScores)
+
+  return {
+    hp: {
+      current: hpMax,
+      max: hpMax,
+      temporary: 0,
+    },
+    ac: 10 + dexterityModifier,
+    initiative: dexterityModifier,
+    speed: 30,
+    passivePerception: 8 + proficiency + wisdomModifier,
+    attackBonus: martialModifier + proficiency,
+    spellSaveDc: 8 + spellcastingModifier + proficiency,
+  }
+}
 
 const createDefaultAbilityScores = (): Record<AbilityKey, number> => ({
   str: 10,
@@ -355,7 +405,7 @@ const createSpellEntry = (
   prepared,
 })
 
-const getDefaultHitDie = (className: string) => classHitDieMap[className] ?? 'D8'
+const getDefaultHitDie = (className: string) => getClassHitDieRule(className).hitDie
 
 const createCustomResource = (name = '', current = 0, max = 0): CharacterCustomResource => {
   const normalizedMax = Math.max(0, Number(max) || 0)
@@ -575,119 +625,120 @@ const createDefaultSkillSelection = () => {
   )
 }
 
-const createCharacter = (overrides: Partial<Character> = {}): Character => ({
-  id: crypto.randomUUID(),
-  name: '未命名角色',
-  race: '人类',
-  gender: characterCreationConfig.defaults.gender,
-  className: '野蛮人',
-  classes: [createClassEntry('野蛮人', 1)],
-  level: 1,
-  background: '侍僧',
-  alignment: '中立善良',
-  size: '中型',
-  hp: { current: 8, max: 8, temporary: 0 },
-  ac: 10,
-  initiative: 0,
-  speed: 30,
-  proficiency: 2,
-  passivePerception: 10,
-  attackBonus: 2,
-  spellSaveDc: 12,
-  story: '',
-  abilities: [
-    {
-      key: 'str',
-      label: '力量',
-      short: 'STR',
-      score: 10,
-      save: 0,
-      skills: [{ name: '运动', value: 0 }],
+const createCharacter = (overrides: Partial<Character> = {}): Character => {
+  const defaultClass = createClassEntry(characterCreationConfig.defaults.className, characterCreationConfig.defaults.level)
+  const defaultAbilityScores = createDefaultAbilityScores()
+  const defaultProficiency = calculateProficiencyBonus(defaultClass.level)
+  const defaultCoreStats = calculateInitialCoreStats([defaultClass], defaultAbilityScores, defaultProficiency)
+
+  return {
+    id: crypto.randomUUID(),
+    name: '未命名角色',
+    race: '人类',
+    gender: characterCreationConfig.defaults.gender,
+    className: characterCreationConfig.defaults.className,
+    classes: [defaultClass],
+    level: characterCreationConfig.defaults.level,
+    background: '侍僧',
+    alignment: '中立善良',
+    size: '中型',
+    ...defaultCoreStats,
+    proficiency: defaultProficiency,
+    story: '',
+    abilities: [
+      {
+        key: 'str',
+        label: '力量',
+        short: 'STR',
+        score: 10,
+        save: 0,
+        skills: [{ name: '运动', value: 0 }],
+      },
+      {
+        key: 'dex',
+        label: '敏捷',
+        short: 'DEX',
+        score: 10,
+        save: 0,
+        skills: [
+          { name: '杂技', value: 0 },
+          { name: '巧手', value: 0 },
+          { name: '隐匿', value: 0 },
+        ],
+      },
+      {
+        key: 'con',
+        label: '体质',
+        short: 'CON',
+        score: 10,
+        save: 0,
+        skills: [],
+      },
+      {
+        key: 'int',
+        label: '智力',
+        short: 'INT',
+        score: 10,
+        save: 0,
+        skills: [
+          { name: '奥秘', value: 0 },
+          { name: '历史', value: 0 },
+          { name: '调查', value: 0 },
+          { name: '自然', value: 0 },
+          { name: '宗教', value: 0 },
+        ],
+      },
+      {
+        key: 'wis',
+        label: '感知',
+        short: 'WIS',
+        score: 10,
+        save: 0,
+        skills: [
+          { name: '驯兽', value: 0 },
+          { name: '洞悉', value: 0 },
+          { name: '医药', value: 0 },
+          { name: '察觉', value: 0 },
+          { name: '求生', value: 0 },
+        ],
+      },
+      {
+        key: 'cha',
+        label: '魅力',
+        short: 'CHA',
+        score: 10,
+        save: 0,
+        skills: [
+          { name: '欺瞒', value: 0 },
+          { name: '威吓', value: 0 },
+          { name: '表演', value: 0 },
+          { name: '说服', value: 0 },
+        ],
+      },
+    ],
+    feats: [],
+    features: [],
+    spells: [],
+    spellSlots: createDefaultSpellSlots(),
+    hitDice: normalizeHitDice([defaultClass], undefined),
+    resources: [],
+    gold: 0,
+    attunementMax: 3,
+    inventoryItems: [],
+    adventureLogs: [],
+    creatures: [],
+    proficiencies: {
+      weapons: '',
+      armor: '',
+      tools: '',
+      languages: '',
+      other: '',
     },
-    {
-      key: 'dex',
-      label: '敏捷',
-      short: 'DEX',
-      score: 10,
-      save: 0,
-      skills: [
-        { name: '杂技', value: 0 },
-        { name: '巧手', value: 0 },
-        { name: '隐匿', value: 0 },
-      ],
-    },
-    {
-      key: 'con',
-      label: '体质',
-      short: 'CON',
-      score: 10,
-      save: 0,
-      skills: [],
-    },
-    {
-      key: 'int',
-      label: '智力',
-      short: 'INT',
-      score: 10,
-      save: 0,
-      skills: [
-        { name: '奥秘', value: 0 },
-        { name: '历史', value: 0 },
-        { name: '调查', value: 0 },
-        { name: '自然', value: 0 },
-        { name: '宗教', value: 0 },
-      ],
-    },
-    {
-      key: 'wis',
-      label: '感知',
-      short: 'WIS',
-      score: 10,
-      save: 0,
-      skills: [
-        { name: '驯兽', value: 0 },
-        { name: '洞悉', value: 0 },
-        { name: '医药', value: 0 },
-        { name: '察觉', value: 0 },
-        { name: '求生', value: 0 },
-      ],
-    },
-    {
-      key: 'cha',
-      label: '魅力',
-      short: 'CHA',
-      score: 10,
-      save: 0,
-      skills: [
-        { name: '欺瞒', value: 0 },
-        { name: '威吓', value: 0 },
-        { name: '表演', value: 0 },
-        { name: '说服', value: 0 },
-      ],
-    },
-  ],
-  feats: [],
-  features: [],
-  spells: [],
-  spellSlots: createDefaultSpellSlots(),
-  hitDice: [],
-  resources: [],
-  gold: 0,
-  attunementMax: 3,
-  inventoryItems: [],
-  adventureLogs: [],
-  creatures: [],
-  proficiencies: {
-    weapons: '',
-    armor: '',
-    tools: '',
-    languages: '',
-    other: '',
-  },
-  notes: '',
-  updatedAt: new Date().toISOString(),
-  ...overrides,
-})
+    notes: '',
+    updatedAt: new Date().toISOString(),
+    ...overrides,
+  }
+}
 
 const loadCachedCharacters = (): Character[] => []
 
@@ -987,8 +1038,6 @@ watch(
   { deep: true },
 )
 
-const modifier = (score: number) => Math.floor((score - 10) / 2)
-const signed = (value: number) => `${value >= 0 ? '+' : ''}${value}`
 const getSkillDefinitionByName = (name: string) => skillDefinitions.find((skill) => skill.name === name)
 
 const applyDerivedCharacterValues = (character: Character) => {
@@ -1459,32 +1508,25 @@ const finishCreation = () => {
     {} as Record<AbilityKey, number>,
   )
 
-  const perceptionSkillValue = getSkillValue('perception')
+  const characterClassName = resolveCustomValue(creationDraft.className, creationDraft.customClassName)
+  const characterClasses = [createClassEntry(characterClassName, creationDraft.level)]
+  const initialCoreStats = calculateInitialCoreStats(characterClasses, finalAbilityScores, currentProficiencyBonus.value)
 
   const character = createCharacter({
     name: creationDraft.name.trim(),
     race: resolveCustomValue(creationDraft.species, creationDraft.customSpecies),
     gender: creationDraft.gender,
-    className: resolveCustomValue(creationDraft.className, creationDraft.customClassName),
-    classes: [createClassEntry(resolveCustomValue(creationDraft.className, creationDraft.customClassName), creationDraft.level)],
+    className: characterClassName,
+    classes: characterClasses,
     level: creationDraft.level,
     alignment: creationDraft.alignment,
     background: resolveCustomValue(creationDraft.background, creationDraft.customBackground),
     size: resolveCustomValue(creationDraft.size, creationDraft.customSize),
     story: creationDraft.story.trim() || '这个角色的背景故事还在旅途中慢慢成形。',
-    hp: {
-      current: Math.max(1, 8 + modifier(finalAbilityScores.con)),
-      max: Math.max(1, 8 + modifier(finalAbilityScores.con)),
-      temporary: 0,
-    },
-    ac: 10 + modifier(finalAbilityScores.dex),
-    initiative: modifier(finalAbilityScores.dex),
-    speed: 30,
+    ...initialCoreStats,
     proficiency: currentProficiencyBonus.value,
-    passivePerception: 10 + perceptionSkillValue,
-    attackBonus: 2 + Math.max(modifier(finalAbilityScores.str), modifier(finalAbilityScores.dex)),
-    spellSaveDc: 10 + 2 + Math.max(modifier(finalAbilityScores.int), modifier(finalAbilityScores.wis), modifier(finalAbilityScores.cha)),
     abilities: createAbilitiesFromDraft(),
+    hitDice: normalizeHitDice(characterClasses, undefined),
     notes: '角色创建流程已记录基本信息，后续步骤可继续完善。',
   })
   characters.value = [character, ...characters.value]
