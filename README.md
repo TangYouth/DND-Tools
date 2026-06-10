@@ -1,42 +1,54 @@
-# dnd-tools
+# DND Tools
 
-This template should help get you started developing with Vue 3 in Vite.
+DND Tools 是一个基于 Vue 3、Vite 和 Element Plus 构建的 DND 角色管理工具。它面向跑团玩家和 DM，用来创建、维护和查看角色卡，并把角色相关的属性、资源、法术、物品、日志和生物数据集中管理。
 
-## Recommended IDE Setup
+项目支持浏览器内使用。Chrome、Edge 等 Chromium 浏览器可以选择本机目录保存角色 JSON；其他浏览器会使用浏览器私有存储。角色数据也可以导入、导出，方便备份或迁移。
 
-[VS Code](https://code.visualstudio.com/) + [Vue (Official)](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## 功能概览
 
-## Recommended Browser Setup
+- 角色创建：支持填写基础信息、选择种族/职业/背景/阵营、生成或手动分配属性值、选择技能熟练。
+- 角色看板：展示并编辑 HP、AC、先攻、速度、熟练加值、被动察觉、攻击加值、法术豁免 DC、属性、技能与豁免。
+- 专长与特性：可记录角色专长、职业特性等内容；专长支持从配置中快速选择，也支持自定义编辑。
+- 法术管理：支持法术位管理、已准备法术标记、按环阶筛选、从配置中选择法术或自定义法术。
+- 资源管理：管理职业生命骰和自定义资源；生命骰可投掷并按体质调整值恢复 HP。
+- 物品管理：记录金币、装备、背包物品、价值、描述和同调状态。
+- 冒险日志：记录角色冒险经历、事件和备注。
+- 生物数据：维护召唤物、伙伴、随从或怪物数据，包括 AC、HP、属性、抗性、免疫和描述。
+- 数据存储：支持本机目录存储、浏览器私有存储、角色 JSON 导入和导出。
 
-- Chromium-based browsers (Chrome, Edge, Brave, etc.):
-  - [Vue.js devtools](https://chromewebstore.google.com/detail/vuejs-devtools/nhdogjmejiglipccpnnnanhbledajbpd)
-  - [Turn on Custom Object Formatter in Chrome DevTools](http://bit.ly/object-formatters)
-- Firefox:
-  - [Vue.js devtools](https://addons.mozilla.org/en-US/firefox/addon/vue-js-devtools/)
-  - [Turn on Custom Object Formatter in Firefox DevTools](https://fxdx.dev/firefox-devtools-custom-object-formatters/)
+## 使用方法
+点击右边的released版本，下载最新版本的 DND Tools HTML 文件，双击打开即可。
 
-## Type Support for `.vue` Imports in TS
+## 安装依赖
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+## 开发运行
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+安装依赖：
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+启动本地开发服务：
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+启动后根据终端输出访问本地地址，通常是 `http://localhost:5173`。
+
+## 打包方法
+
+项目使用 Vite 打包，执行：
 
 ```sh
 npm run build
+```
+
+该命令会先运行 TypeScript / Vue 类型检查，然后生成生产构建文件。打包产物输出到 `dist/` 目录。
+
+如需本地预览打包结果，可以执行：
+
+```sh
+npm run preview
 ```
