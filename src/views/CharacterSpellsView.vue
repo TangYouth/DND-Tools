@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
-import spellConfig from '../composables/spellConfig.json'
+import spellConfig from '../config/spellConfig.json'
 
 const spellLevels = Array.from({ length: 10 }, (_, level) => level)
 const spellSlotLevels = Array.from({ length: 9 }, (_, index) => index + 1)

@@ -2,7 +2,7 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
-import featConfig from '../composables/featConfig.json'
+import featConfig from '../config/featConfig.json'
 
 type TraitKind = 'feats' | 'features'
 interface FeatConfigEntry {
