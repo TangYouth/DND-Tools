@@ -78,6 +78,7 @@ interface CharacterTraitEntry {
   id: string
   title: string
   source: string
+  prerequisites: string
   description: string
 }
 
@@ -375,10 +376,11 @@ const createClassEntry = (className = characterCreationConfig.defaults.className
   subclass,
 })
 
-const createTraitEntry = (title = '', source = '', description = ''): CharacterTraitEntry => ({
+const createTraitEntry = (title = '', source = '', description = '', prerequisites = ''): CharacterTraitEntry => ({
   id: crypto.randomUUID(),
   title,
   source,
+  prerequisites,
   description,
 })
 
@@ -491,6 +493,7 @@ const normalizeTraitEntries = (entries: CharacterTraitEntry[] | undefined) => {
     id: entry.id || crypto.randomUUID(),
     title: entry.title?.trim() || '未命名',
     source: entry.source?.trim() || '未填写',
+    prerequisites: entry.prerequisites?.trim() || '',
     description: entry.description?.trim() || '',
   }))
 }

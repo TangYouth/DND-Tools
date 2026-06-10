@@ -2,8 +2,23 @@
 import { computed, reactive, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
+import featConfig from '../composables/featConfig.json'
 
 type TraitKind = 'feats' | 'features'
+interface FeatConfigEntry {
+  name: string
+  form: string
+  prerequisites: string
+  description: string
+}
+
+interface FeatOption {
+  id: string
+  name: string
+  source: string
+  prerequisites: string
+  description: string
+}
 
 const {
   selectedCharacter,
@@ -19,14 +34,54 @@ const {
 const activeKind = ref<TraitKind>('feats')
 const editingTraitId = ref('')
 const isTraitDialogOpen = ref(false)
+const selectedFeatId = ref('')
 const traitDraft = reactive({
   title: '',
-  source: '',
+  source: '通用专长',
+  prerequisites: '',
   description: '',
+  useCustom: false,
 })
 
+const featOptions = computed<FeatOption[]>(() => {
+  return Object.entries(featConfig as Record<string, FeatConfigEntry[]>).flatMap(([groupKey, entries]) =>
+    entries.map((entry, index) => ({
+      id: `${groupKey}-${index}-${entry.name}`,
+      name: entry.name,
+      source: entry.form || '通用专长',
+      prerequisites: entry.prerequisites || '',
+      description: entry.description || '',
+    })),
+  )
+})
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const traitDialogTitle = computed(() => `${editingTraitId.value ? '编辑' : '添加'}${activeKind.value === 'feats' ? '专长' : '特性'}`)
+const isFeatConfigMode = computed(() => activeKind.value === 'feats' && !traitDraft.useCustom)
+
+const findMatchingFeatOption = (trait: { title: string; source: string; prerequisites?: string; description: string }) => {
+  return featOptions.value.find(
+    (option) =>
+      option.name === trait.title &&
+      option.source === trait.source &&
+      option.prerequisites === (trait.prerequisites ?? '') &&
+      option.description === trait.description,
+  )
+}
+
+const applyFeatOption = (optionId: string) => {
+  const option = featOptions.value.find((item) => item.id === optionId)
+  if (!option) {
+    traitDraft.title = ''
+    traitDraft.source = '通用专长'
+    traitDraft.prerequisites = ''
+    traitDraft.description = ''
+    return
+  }
+  traitDraft.title = option.name
+  traitDraft.source = option.source
+  traitDraft.prerequisites = option.prerequisites
+  traitDraft.description = option.description
+}
 
 const deleteCurrentCharacter = () => {
   if (!selectedCharacter.value) return
@@ -40,8 +95,16 @@ const openTraitDialog = (kind: TraitKind, traitId = '') => {
   editingTraitId.value = traitId
   const currentTrait = traitId ? form[kind].find((item) => item.id === traitId) : undefined
   traitDraft.title = currentTrait?.title ?? ''
-  traitDraft.source = currentTrait?.source ?? ''
+  traitDraft.source = currentTrait?.source ?? (kind === 'feats' ? '通用专长' : '')
+  traitDraft.prerequisites = currentTrait?.prerequisites ?? ''
   traitDraft.description = currentTrait?.description ?? ''
+  selectedFeatId.value = ''
+  traitDraft.useCustom = kind !== 'feats'
+  if (kind === 'feats' && currentTrait) {
+    const matchedOption = findMatchingFeatOption(currentTrait)
+    selectedFeatId.value = matchedOption?.id ?? ''
+    traitDraft.useCustom = !matchedOption
+  }
   isTraitDialogOpen.value = true
 }
 
@@ -52,7 +115,16 @@ const closeTraitDialog = () => {
 }
 
 const saveTrait = () => {
-  const nextTrait = createTraitEntry(traitDraft.title.trim() || '未命名', traitDraft.source.trim() || '未填写', traitDraft.description.trim())
+  if (isFeatConfigMode.value && selectedFeatId.value) {
+    applyFeatOption(selectedFeatId.value)
+  }
+
+  const nextTrait = createTraitEntry(
+    traitDraft.title.trim() || '未命名',
+    traitDraft.source.trim() || '未填写',
+    traitDraft.description.trim(),
+    traitDraft.prerequisites.trim(),
+  )
   const list = form[activeKind.value]
 
   if (editingTraitId.value) {
@@ -79,6 +151,19 @@ const removeTrait = (kind: TraitKind, traitId: string) => {
   if (!window.confirm(`确定删除「${trait.title}」吗？`)) return
   form[kind] = form[kind].filter((item) => item.id !== traitId)
   saveForm()
+}
+
+const handleFeatSelectionChange = (optionId: string) => {
+  selectedFeatId.value = optionId
+  applyFeatOption(optionId)
+}
+
+const handleCustomModeChange = (useCustom: string | number | boolean) => {
+  traitDraft.useCustom = Boolean(useCustom)
+  if (!traitDraft.useCustom) {
+    traitDraft.source = '通用专长'
+    if (selectedFeatId.value) applyFeatOption(selectedFeatId.value)
+  }
 }
 </script>
 
@@ -127,6 +212,7 @@ const removeTrait = (kind: TraitKind, traitId: string) => {
           </div>
           <h3>{{ trait.title }}</h3>
           <p class="trait-source">来源：{{ trait.source }}</p>
+          <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
           <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
         </article>
       </div>
@@ -147,6 +233,7 @@ const removeTrait = (kind: TraitKind, traitId: string) => {
           </div>
           <h3>{{ trait.title }}</h3>
           <p class="trait-source">来源：{{ trait.source }}</p>
+          <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
           <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
         </article>
       </div>
@@ -165,17 +252,52 @@ const removeTrait = (kind: TraitKind, traitId: string) => {
           </header>
 
           <div class="trait-dialog-form">
+            <label v-if="activeKind === 'feats'" class="wide-field">
+              从配置选择专长
+              <el-select
+                v-model="selectedFeatId"
+                filterable
+                clearable
+                :disabled="traitDraft.useCustom"
+                placeholder="输入名称或来源快速查找"
+                @change="handleFeatSelectionChange"
+              >
+                <el-option
+                  v-for="feat in featOptions"
+                  :key="feat.id"
+                  :label="`${feat.name} · ${feat.source}`"
+                  :value="feat.id"
+                >
+                  <span>{{ feat.name }}</span>
+                  <small>{{ feat.source }}</small>
+                </el-option>
+              </el-select>
+            </label>
+            <label v-if="activeKind === 'feats'" class="checkbox-field wide-field">
+              <el-checkbox v-model="traitDraft.useCustom" @change="handleCustomModeChange" />
+              使用自定义专长
+            </label>
             <label>
               名称
-              <el-input v-model="traitDraft.title" placeholder="例如：神射手" />
+              <el-input v-model="traitDraft.title" :disabled="isFeatConfigMode" placeholder="例如：神射手" />
             </label>
             <label>
               来源
-              <el-input v-model="traitDraft.source" placeholder="例如：起源专长" />
+              <el-input v-model="traitDraft.source" :disabled="isFeatConfigMode" placeholder="例如：通用专长" />
+            </label>
+            <label class="wide-field">
+              先决条件
+              <el-input v-model="traitDraft.prerequisites" :disabled="isFeatConfigMode" placeholder="例如：等级 4+，敏捷 13+" />
             </label>
             <label class="wide-field">
               描述
-              <el-input v-model="traitDraft.description" type="textarea" :rows="6" placeholder="填写规则效果、触发条件或使用说明" />
+              <el-input
+                v-model="traitDraft.description"
+                type="textarea"
+                :rows="6"
+                :disabled="isFeatConfigMode"
+                placeholder="填写规则效果、触发条件或使用说明"
+              />
             </label>
           </div>
 
