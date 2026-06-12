@@ -20,24 +20,64 @@ const {
 } = useCharacters()
 
 const diceDrawer = ref<InstanceType<typeof DiceDrawer> | null>(null)
+const isMobileSidebarOpen = ref(false)
+const touchStartX = ref(0)
+const touchStartY = ref(0)
 
 const openCharacter = (id: string) => {
   selectCharacter(id)
+  isMobileSidebarOpen.value = false
   router.push({ name: 'characters' })
 }
 
 const createCharacter = () => {
   resetCreationDraft()
+  isMobileSidebarOpen.value = false
   router.push({ name: 'character-create' })
 }
 
 const openDicePanel = () => {
+  isMobileSidebarOpen.value = false
   diceDrawer.value?.open()
+}
+
+const openMobileSidebar = () => {
+  isMobileSidebarOpen.value = true
+}
+
+const closeMobileSidebar = () => {
+  isMobileSidebarOpen.value = false
+}
+
+const handleTouchStart = (event: TouchEvent) => {
+  const touch = event.touches[0]
+  if (!touch) return
+  touchStartX.value = touch.clientX
+  touchStartY.value = touch.clientY
+}
+
+const handleTouchEnd = (event: TouchEvent) => {
+  const touch = event.changedTouches[0]
+  if (!touch) return
+  const deltaX = touch.clientX - touchStartX.value
+  const deltaY = Math.abs(touch.clientY - touchStartY.value)
+
+  if (!isMobileSidebarOpen.value && touchStartX.value <= 28 && deltaX > 72 && deltaY < 60) {
+    openMobileSidebar()
+  }
 }
 </script>
 
 <template>
-  <div class="app-shell">
+  <div class="app-shell" :class="{ 'sidebar-open': isMobileSidebarOpen }" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
+    <button class="mobile-menu-button" type="button" aria-label="打开角色侧栏" @click="openMobileSidebar">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+
+    <button v-if="isMobileSidebarOpen" class="mobile-sidebar-scrim" type="button" aria-label="关闭角色侧栏" @click="closeMobileSidebar"></button>
+
     <aside class="sidebar">
       <div class="brand-mark">
         <span>DND</span>

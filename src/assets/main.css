@@ -58,9 +58,52 @@ button {
   min-height: 100vh;
 }
 
+.mobile-menu-button,
+.mobile-sidebar-scrim {
+  display: none;
+}
+
+.mobile-menu-button {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 35;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border: 1px solid rgba(216, 201, 181, 0.88);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(251, 247, 239, 0.9);
+  box-shadow: 0 10px 28px rgba(68, 45, 20, 0.16);
+  backdrop-filter: blur(10px);
+}
+
+.mobile-menu-button span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  border-radius: 99px;
+  background: currentColor;
+}
+
+.mobile-menu-button span + span {
+  margin-top: 4px;
+}
+
+.mobile-sidebar-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 29;
+  border: 0;
+  background: rgba(18, 18, 18, 0.36);
+  backdrop-filter: blur(3px);
+}
+
 .sidebar {
   position: sticky;
   top: 0;
+  z-index: 30;
   display: flex;
   height: 100vh;
   flex-direction: column;
@@ -575,6 +618,7 @@ button {
 
 .workspace {
   padding: 30px 34px 40px;
+  min-width: 0;
 }
 
 .topbar {
@@ -610,6 +654,28 @@ h1 {
   flex-wrap: wrap;
   gap: 10px;
   justify-content: flex-end;
+}
+
+.compact-action-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.compact-action-button .action-icon {
+  display: none;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  line-height: 1;
+}
+
+.export-action .action-icon::before {
+  content: '↓';
+}
+
+.delete-action .action-icon::before {
+  content: '×';
 }
 
 .character-subtitle {
@@ -705,6 +771,7 @@ h1 {
 
 .panel {
   position: relative;
+  min-width: 0;
   margin-bottom: 18px;
   padding: 20px;
   border: 1px solid var(--line);
@@ -3662,6 +3729,26 @@ select {
   gap: 12px;
 }
 
+.form-grid label,
+.class-edit-row label,
+.proficiency-edit-grid label,
+.ability-compact-controls label,
+.wide-field {
+  min-width: 0;
+}
+
+.form-grid .el-input,
+.form-grid .el-input-number,
+.form-grid .el-select,
+.form-grid .el-textarea,
+.class-edit-row .el-input,
+.class-edit-row .el-input-number,
+.class-edit-row .el-select,
+.wide-field .el-textarea {
+  width: 100%;
+  max-width: 100%;
+}
+
 .card-edit-panel {
   display: grid;
   gap: 14px;
@@ -4015,17 +4102,36 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .mobile-menu-button {
+    display: grid;
+  }
+
+  .mobile-sidebar-scrim {
+    display: block;
+  }
+
   .sidebar {
-    position: static;
-    height: auto;
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: min(82vw, 300px);
+    height: 100vh;
+    transform: translateX(-104%);
+    transition: transform 180ms ease;
+    box-shadow: 18px 0 50px rgba(12, 17, 23, 0.34);
+  }
+
+  .sidebar-open .sidebar {
+    transform: translateX(0);
   }
 
   .character-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: 1fr;
   }
 
   .workspace {
-    padding: 24px 16px;
+    padding: 72px 16px 24px;
   }
 
   .topbar,
@@ -4037,6 +4143,21 @@ textarea {
   .board-grid,
   .proficiency-grid {
     grid-template-columns: 1fr;
+  }
+
+  .character-page-tabs {
+    flex-wrap: nowrap;
+    gap: 20px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .character-page-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .proficiency-grid div {
@@ -4138,8 +4259,6 @@ textarea {
 
 @media (max-width: 640px) {
   .character-list,
-  .metric-grid,
-  .ability-grid,
   .trait-dialog-form,
   .slot-editor-grid,
   .spell-dialog-form,
@@ -4156,12 +4275,73 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .workspace {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+    padding-left: 48px;
+  }
+
+  .topbar h1 {
+    overflow-wrap: anywhere;
+    font-size: 28px;
+  }
+
+  .character-subtitle {
+    font-size: 15px;
+  }
+
   .topbar-actions {
-    justify-content: stretch;
+    flex-wrap: nowrap;
+    justify-content: flex-end;
   }
 
   .topbar-actions button {
-    flex: 1 1 140px;
+    flex: 0 0 auto;
+  }
+
+  .compact-action-button {
+    width: 40px;
+    min-width: 40px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .compact-action-button .action-icon {
+    display: grid;
+    font-size: 20px;
+    font-weight: 800;
+  }
+
+  .compact-action-button .action-text {
+    display: none;
+  }
+
+  .metric-grid,
+  .ability-grid {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .metric-card {
+    flex: 0 0 156px;
+    scroll-snap-align: start;
+  }
+
+  .ability-card {
+    flex: 0 0 190px;
+    scroll-snap-align: start;
   }
 
   .dice-drawer {

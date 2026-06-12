@@ -198,8 +198,14 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
