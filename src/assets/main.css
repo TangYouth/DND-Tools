@@ -926,20 +926,6 @@ h1 {
   background: rgba(255, 255, 255, 0.68);
 }
 
-.metric-card.interactive::after {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  border: 1px solid rgba(53, 119, 84, 0.24);
-  border-radius: 999px;
-  padding: 2px 8px;
-  color: var(--green);
-  background: rgba(255, 255, 255, 0.72);
-  font-size: 12px;
-  font-weight: 700;
-  content: '调整';
-}
-
 .metric-card span {
   color: currentColor;
   font-weight: 700;
@@ -1001,6 +987,14 @@ h1 {
 
 .metric-card.bronze {
   color: var(--bronze);
+}
+
+.metric-panel-hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
 }
 
 .ability-grid {
@@ -3796,6 +3790,7 @@ select {
   gap: 18px;
 }
 
+.edit-dialog-backdrop,
 .hp-dialog-backdrop {
   position: fixed;
   inset: 0;
@@ -3807,6 +3802,7 @@ select {
   backdrop-filter: blur(4px);
 }
 
+.edit-dialog,
 .hp-dialog {
   display: grid;
   width: min(720px, 100%);
@@ -3820,6 +3816,13 @@ select {
   box-shadow: 0 26px 72px rgba(21, 18, 14, 0.3);
 }
 
+.edit-dialog {
+  width: min(980px, 100%);
+  grid-template-rows: auto minmax(0, 1fr);
+  overflow: hidden;
+}
+
+.edit-dialog > header,
 .hp-dialog > header {
   display: flex;
   align-items: flex-start;
@@ -3829,10 +3832,36 @@ select {
   border-bottom: 1px solid var(--line);
 }
 
+.edit-dialog h2,
 .hp-dialog h2 {
   margin: 0;
   color: var(--ink);
   font-size: 24px;
+}
+
+.edit-modal-form {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  min-height: 0;
+  overflow: hidden;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: 0;
+}
+
+.edit-modal-scroll {
+  display: grid;
+  min-height: 0;
+  gap: 14px;
+  overflow: auto;
+  padding-right: 4px;
+}
+
+.edit-modal-form .card-edit-actions {
+  margin: 0 -2px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(216, 201, 181, 0.76);
+  background: var(--paper);
 }
 
 .hp-dialog-summary {
@@ -3950,15 +3979,30 @@ select {
   display: grid;
   grid-template-columns: minmax(120px, 1fr) auto auto;
   gap: 10px;
-  align-items: end;
+  align-items: center;
   padding: 10px 12px;
   border-bottom: 1px solid rgba(216, 201, 181, 0.62);
+}
+
+.ability-compact-controls label {
+  align-self: center;
+}
+
+.ability-compact-controls > label:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
 }
 
 .ability-compact-controls > span {
   align-self: center;
   color: #5b4321;
   white-space: nowrap;
+}
+
+.ability-compact-controls .el-input-number {
+  width: 108px;
 }
 
 .skill-compact-list {
@@ -4269,8 +4313,6 @@ textarea {
   .proficiency-edit-grid,
   .skill-edit-row,
   .ability-compact-editor,
-  .ability-compact-controls,
-  .skill-compact-row,
   .info-grid {
     grid-template-columns: 1fr;
   }
@@ -4323,7 +4365,25 @@ textarea {
     display: none;
   }
 
-  .metric-grid,
+  .metric-grid {
+    display: grid;
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: 156px;
+    grid-template-rows: repeat(2, 104px);
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .metric-card {
+    min-height: 104px;
+    scroll-snap-align: start;
+  }
+
   .ability-grid {
     display: flex;
     overflow-x: auto;
@@ -4334,14 +4394,52 @@ textarea {
     -webkit-overflow-scrolling: touch;
   }
 
-  .metric-card {
-    flex: 0 0 156px;
-    scroll-snap-align: start;
-  }
-
   .ability-card {
     flex: 0 0 190px;
     scroll-snap-align: start;
+  }
+
+  .edit-dialog-backdrop {
+    padding: 14px;
+  }
+
+  .edit-dialog {
+    max-height: calc(100vh - 28px);
+    padding: 16px;
+  }
+
+  .edit-modal-scroll {
+    padding-right: 2px;
+  }
+
+  .ability-compact-controls {
+    grid-template-columns: minmax(92px, 1fr) auto auto;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .ability-compact-controls .el-input-number {
+    width: 96px;
+    max-width: 100%;
+  }
+
+  .ability-compact-controls .checkbox-field {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  .skill-compact-row {
+    grid-template-columns: minmax(44px, 1fr) 40px 62px 62px;
+    gap: 6px;
+    min-height: 38px;
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .skill-compact-row .el-checkbox {
+    white-space: nowrap;
   }
 
   .dice-drawer {

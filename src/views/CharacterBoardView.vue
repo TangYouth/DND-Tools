@@ -48,6 +48,16 @@ const hpTemporaryAmount = ref(0)
 const alignmentOptions = computed(() => characterCreationConfig.alignments.flat())
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const draftTotalLevel = computed(() => getClassTotalLevel(form.classes))
+const editSectionTitle = computed(() => {
+  const titleMap: Record<EditSection, string> = {
+    profile: '编辑基本信息',
+    core: '编辑核心数据',
+    abilities: '编辑属性 · 技能 · 豁免',
+    proficiencies: '编辑熟练项',
+  }
+
+  return activeEditSection.value ? titleMap[activeEditSection.value] : ''
+})
 const metricIconMap: Record<string, string> = {
   HP: hpIcon,
   AC: acIcon,
@@ -266,70 +276,6 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
           <p class="story-text" :title="selectedCharacter.story || '暂无背景故事。'">{{ selectedCharacter.story || '暂无背景故事。' }}</p>
         </div>
 
-        <form v-if="activeEditSection === 'profile'" class="card-edit-panel" @submit.prevent="saveSection">
-          <div class="form-grid">
-            <label>
-              名称
-              <el-input v-model="form.name" />
-            </label>
-            <label>
-              种族
-              <el-input v-model="form.race" />
-            </label>
-            <label>
-              性别
-              <el-select v-model="form.gender" placeholder="选择性别">
-                <el-option v-for="gender in characterCreationConfig.genders" :key="gender" :label="gender" :value="gender" />
-              </el-select>
-            </label>
-            <label>
-              背景
-              <el-input v-model="form.background" />
-            </label>
-            <label>
-              体型
-              <el-input v-model="form.size" />
-            </label>
-            <label>
-              阵营
-              <el-select v-model="form.alignment" placeholder="选择阵营">
-                <el-option v-for="alignment in alignmentOptions" :key="alignment" :label="alignment" :value="alignment" />
-              </el-select>
-            </label>
-          </div>
-          <div class="class-editor">
-            <header>
-              <strong>职业与等级</strong>
-              <span>总等级 Lv.{{ draftTotalLevel }} · 熟练加值 {{ signed(calculateProficiencyBonus(draftTotalLevel)) }}</span>
-              <button class="plain-button" type="button" @click="addDraftClass">添加职业</button>
-            </header>
-            <div v-for="classEntry in form.classes" :key="classEntry.id" class="class-edit-row">
-              <label>
-                职业
-                <el-input v-model="classEntry.className" placeholder="例如：战士" @change="saveClassChange" />
-              </label>
-              <label>
-                等级
-                <el-input-number v-model="classEntry.level" :min="1" :max="20" controls-position="right" @change="saveClassChange" />
-              </label>
-              <label>
-                子职业
-                <el-input v-model="classEntry.subclass" placeholder="例如：战斗大师" />
-              </label>
-              <button class="plain-button" type="button" :disabled="form.classes.length <= 1" @click="removeDraftClass(classEntry.id)">
-                移除
-              </button>
-            </div>
-          </div>
-          <label class="wide-field">
-            背景故事
-            <el-input v-model="form.story" type="textarea" :rows="5" />
-          </label>
-          <footer class="card-edit-actions">
-            <button class="plain-button" type="button" @click="closeEditSection">取消</button>
-            <button class="primary-button" type="submit">保存基本信息</button>
-          </footer>
-        </form>
       </article>
 
       <article class="panel">
@@ -357,55 +303,8 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
             <i v-if="metric.label === 'HP'" :style="{ width: `${hpPercent}%` }"></i>
           </button>
         </div>
+        <p class="metric-panel-hint">可以点击 HP 快速调整当前生命值、恢复和临时生命值。</p>
 
-        <form v-if="activeEditSection === 'core'" class="card-edit-panel" @submit.prevent="saveSection">
-          <div class="form-grid">
-            <label>
-              HP 当前
-              <el-input-number v-model="form.hp.current" :min="0" controls-position="right" />
-            </label>
-            <label>
-              HP 最大
-              <el-input-number v-model="form.hp.max" :min="1" controls-position="right" />
-            </label>
-            <label>
-              临时生命值
-              <el-input-number v-model="form.hp.temporary" :min="0" controls-position="right" />
-            </label>
-            <label>
-              AC
-              <el-input-number v-model="form.ac" controls-position="right" />
-            </label>
-            <label>
-              先攻
-              <el-input-number v-model="form.initiative" controls-position="right" />
-            </label>
-            <label>
-              速度
-              <el-input-number v-model="form.speed" controls-position="right" />
-            </label>
-            <label>
-              熟练加值
-              <el-input-number v-model="form.proficiency" controls-position="right" />
-            </label>
-            <label>
-              被动察觉
-              <el-input-number v-model="form.passivePerception" controls-position="right" />
-            </label>
-            <label>
-              攻击加值
-              <el-input-number v-model="form.attackBonus" controls-position="right" />
-            </label>
-            <label>
-              法术豁免 DC
-              <el-input-number v-model="form.spellSaveDc" controls-position="right" />
-            </label>
-          </div>
-          <footer class="card-edit-actions">
-            <button class="plain-button" type="button" @click="closeEditSection">取消</button>
-            <button class="primary-button" type="submit">保存核心数据</button>
-          </footer>
-        </form>
       </article>
     </section>
 
@@ -505,50 +404,6 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
         </article>
       </div>
 
-      <form v-if="activeEditSection === 'abilities'" class="card-edit-panel" @submit.prevent="saveSection">
-        <div class="ability-compact-editor">
-          <article v-for="ability in form.abilities" :key="ability.key" class="ability-compact-card">
-            <header>
-              <strong>{{ ability.label }}</strong>
-              <span>{{ signed(getDraftAbilityModifier(ability.score)) }}</span>
-            </header>
-            <div class="ability-compact-controls">
-              <label>
-                属性
-                <el-input-number v-model="ability.score" controls-position="right" />
-              </label>
-              <label class="checkbox-field">
-                <el-checkbox v-model="ability.proficient" />
-                豁免熟练
-              </label>
-              <span>豁免 {{ signed(getDraftSaveValue(ability)) }}</span>
-            </div>
-            <div v-if="ability.skills.length > 0" class="skill-compact-list">
-              <div v-for="skill in ability.skills" :key="skill.name" class="skill-compact-row">
-                <span>{{ skill.name }}</span>
-                <strong>{{ signed(getDraftSkillValue(ability, skill)) }}</strong>
-                <el-checkbox
-                  :model-value="Boolean(skill.proficient)"
-                  @change="setDraftSkillProficiency(skill, Boolean($event))"
-                >
-                  熟练
-                </el-checkbox>
-                <el-checkbox
-                  :model-value="Boolean(skill.expertise)"
-                  @change="setDraftSkillExpertise(skill, Boolean($event))"
-                >
-                  专精
-                </el-checkbox>
-              </div>
-            </div>
-            <div v-else class="skill-compact-empty">暂无关联技能</div>
-          </article>
-        </div>
-        <footer class="card-edit-actions">
-          <button class="plain-button" type="button" @click="closeEditSection">取消</button>
-          <button class="primary-button" type="submit">保存属性技能</button>
-        </footer>
-      </form>
     </section>
 
     <section class="panel proficiency-panel">
@@ -564,35 +419,202 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
         </div>
       </div>
 
-      <form v-if="activeEditSection === 'proficiencies'" class="card-edit-panel" @submit.prevent="saveSection">
-        <div class="proficiency-edit-grid">
-          <label>
-            武器熟练项
-            <el-input v-model="form.proficiencies.weapons" type="textarea" :rows="3" />
-          </label>
-          <label>
-            护甲熟练项
-            <el-input v-model="form.proficiencies.armor" type="textarea" :rows="3" />
-          </label>
-          <label>
-            工具熟练项
-            <el-input v-model="form.proficiencies.tools" type="textarea" :rows="3" />
-          </label>
-          <label>
-            语言
-            <el-input v-model="form.proficiencies.languages" type="textarea" :rows="3" />
-          </label>
-          <label>
-            其他熟练项
-            <el-input v-model="form.proficiencies.other" type="textarea" :rows="3" />
-          </label>
-        </div>
-        <footer class="card-edit-actions">
-          <button class="plain-button" type="button" @click="closeEditSection">取消</button>
-          <button class="primary-button" type="submit">保存熟练项</button>
-        </footer>
-      </form>
     </section>
+
+    <Teleport to="body">
+      <div v-if="activeEditSection" class="edit-dialog-backdrop">
+        <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
+          <header>
+            <div>
+              <p class="eyebrow">人物看板</p>
+              <h2 id="edit-dialog-title">{{ editSectionTitle }}</h2>
+            </div>
+            <button class="icon-button" type="button" :aria-label="`关闭${editSectionTitle}`" @click="closeEditSection">×</button>
+          </header>
+
+          <form class="card-edit-panel edit-modal-form" @submit.prevent="saveSection">
+            <div class="edit-modal-scroll">
+              <template v-if="activeEditSection === 'profile'">
+              <div class="form-grid">
+                <label>
+                  名称
+                  <el-input v-model="form.name" />
+                </label>
+                <label>
+                  种族
+                  <el-input v-model="form.race" />
+                </label>
+                <label>
+                  性别
+                  <el-select v-model="form.gender" placeholder="选择性别">
+                    <el-option v-for="gender in characterCreationConfig.genders" :key="gender" :label="gender" :value="gender" />
+                  </el-select>
+                </label>
+                <label>
+                  背景
+                  <el-input v-model="form.background" />
+                </label>
+                <label>
+                  体型
+                  <el-input v-model="form.size" />
+                </label>
+                <label>
+                  阵营
+                  <el-select v-model="form.alignment" placeholder="选择阵营">
+                    <el-option v-for="alignment in alignmentOptions" :key="alignment" :label="alignment" :value="alignment" />
+                  </el-select>
+                </label>
+              </div>
+              <div class="class-editor">
+                <header>
+                  <strong>职业与等级</strong>
+                  <span>总等级 Lv.{{ draftTotalLevel }} · 熟练加值 {{ signed(calculateProficiencyBonus(draftTotalLevel)) }}</span>
+                  <button class="plain-button" type="button" @click="addDraftClass">添加职业</button>
+                </header>
+                <div v-for="classEntry in form.classes" :key="classEntry.id" class="class-edit-row">
+                  <label>
+                    职业
+                    <el-input v-model="classEntry.className" placeholder="例如：战士" @change="saveClassChange" />
+                  </label>
+                  <label>
+                    等级
+                    <el-input-number v-model="classEntry.level" :min="1" :max="20" controls-position="right" @change="saveClassChange" />
+                  </label>
+                  <label>
+                    子职业
+                    <el-input v-model="classEntry.subclass" placeholder="例如：战斗大师" />
+                  </label>
+                  <button class="plain-button" type="button" :disabled="form.classes.length <= 1" @click="removeDraftClass(classEntry.id)">
+                    移除
+                  </button>
+                </div>
+              </div>
+              <label class="wide-field">
+                背景故事
+                <el-input v-model="form.story" type="textarea" :rows="5" />
+              </label>
+              </template>
+
+              <template v-else-if="activeEditSection === 'core'">
+              <div class="form-grid">
+                <label>
+                  HP 当前
+                  <el-input-number v-model="form.hp.current" :min="0" controls-position="right" />
+                </label>
+                <label>
+                  HP 最大
+                  <el-input-number v-model="form.hp.max" :min="1" controls-position="right" />
+                </label>
+                <label>
+                  临时生命值
+                  <el-input-number v-model="form.hp.temporary" :min="0" controls-position="right" />
+                </label>
+                <label>
+                  AC
+                  <el-input-number v-model="form.ac" controls-position="right" />
+                </label>
+                <label>
+                  先攻
+                  <el-input-number v-model="form.initiative" controls-position="right" />
+                </label>
+                <label>
+                  速度
+                  <el-input-number v-model="form.speed" controls-position="right" />
+                </label>
+                <label>
+                  熟练加值
+                  <el-input-number v-model="form.proficiency" controls-position="right" />
+                </label>
+                <label>
+                  被动察觉
+                  <el-input-number v-model="form.passivePerception" controls-position="right" />
+                </label>
+                <label>
+                  攻击加值
+                  <el-input-number v-model="form.attackBonus" controls-position="right" />
+                </label>
+                <label>
+                  法术豁免 DC
+                  <el-input-number v-model="form.spellSaveDc" controls-position="right" />
+                </label>
+              </div>
+              </template>
+
+              <template v-else-if="activeEditSection === 'abilities'">
+              <div class="ability-compact-editor">
+                <article v-for="ability in form.abilities" :key="ability.key" class="ability-compact-card">
+                  <header>
+                    <strong>{{ ability.label }}</strong>
+                    <span>{{ signed(getDraftAbilityModifier(ability.score)) }}</span>
+                  </header>
+                  <div class="ability-compact-controls">
+                    <label>
+                      属性
+                      <el-input-number v-model="ability.score" controls-position="right" />
+                    </label>
+                    <label class="checkbox-field">
+                      <el-checkbox v-model="ability.proficient" />
+                      豁免熟练
+                    </label>
+                    <span>豁免 {{ signed(getDraftSaveValue(ability)) }}</span>
+                  </div>
+                  <div v-if="ability.skills.length > 0" class="skill-compact-list">
+                    <div v-for="skill in ability.skills" :key="skill.name" class="skill-compact-row">
+                      <span>{{ skill.name }}</span>
+                      <strong>{{ signed(getDraftSkillValue(ability, skill)) }}</strong>
+                      <el-checkbox
+                        :model-value="Boolean(skill.proficient)"
+                        @change="setDraftSkillProficiency(skill, Boolean($event))"
+                      >
+                        熟练
+                      </el-checkbox>
+                      <el-checkbox
+                        :model-value="Boolean(skill.expertise)"
+                        @change="setDraftSkillExpertise(skill, Boolean($event))"
+                      >
+                        专精
+                      </el-checkbox>
+                    </div>
+                  </div>
+                  <div v-else class="skill-compact-empty">暂无关联技能</div>
+                </article>
+              </div>
+              </template>
+
+              <template v-else-if="activeEditSection === 'proficiencies'">
+              <div class="proficiency-edit-grid">
+                <label>
+                  武器熟练项
+                  <el-input v-model="form.proficiencies.weapons" type="textarea" :rows="3" />
+                </label>
+                <label>
+                  护甲熟练项
+                  <el-input v-model="form.proficiencies.armor" type="textarea" :rows="3" />
+                </label>
+                <label>
+                  工具熟练项
+                  <el-input v-model="form.proficiencies.tools" type="textarea" :rows="3" />
+                </label>
+                <label>
+                  语言
+                  <el-input v-model="form.proficiencies.languages" type="textarea" :rows="3" />
+                </label>
+                <label>
+                  其他熟练项
+                  <el-input v-model="form.proficiencies.other" type="textarea" :rows="3" />
+                </label>
+              </div>
+              </template>
+            </div>
+
+            <footer class="card-edit-actions">
+              <button class="plain-button" type="button" @click="closeEditSection">取消</button>
+              <button class="primary-button" type="submit">保存</button>
+            </footer>
+          </form>
+        </section>
+      </div>
+    </Teleport>
 
   </template>
 </template>
