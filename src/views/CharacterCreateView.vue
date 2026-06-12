@@ -47,6 +47,7 @@ const {
   isRollOptionUsed,
   assignRollToAbility,
   setAbilityBonus,
+  setAbilityProficiency,
   getFinalAbilityScore,
   setSkillProficiency,
   setSkillExpertise,
@@ -518,6 +519,17 @@ onUnmounted(() => {
               </strong>
               <em>调整值 {{ signed(group.modifier) }}</em>
             </header>
+
+            <div class="ability-proficiency-row">
+              <span>{{ group.label }}豁免</span>
+              <strong>{{ signed(group.save) }}</strong>
+              <el-checkbox
+                :model-value="creationDraft.abilityProficiencies[group.key]"
+                @change="setAbilityProficiency(group.key, Boolean($event))"
+              >
+                熟练
+              </el-checkbox>
+            </div>
 
             <div class="skill-table-head">
               <span>技能名称</span>

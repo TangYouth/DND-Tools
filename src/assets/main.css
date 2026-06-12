@@ -3487,6 +3487,32 @@ select {
   white-space: nowrap;
 }
 
+.ability-proficiency-row {
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) 86px 92px;
+  gap: 10px;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-bottom: 1px solid rgba(216, 201, 181, 0.66);
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.ability-proficiency-row > span {
+  color: #4a3d30;
+  font-weight: 800;
+}
+
+.ability-proficiency-row > strong {
+  color: var(--ink);
+  font-size: 18px;
+  text-align: center;
+}
+
+.ability-proficiency-row > .el-checkbox {
+  justify-self: center;
+}
+
 .skill-table-head,
 .skill-row {
   display: grid;

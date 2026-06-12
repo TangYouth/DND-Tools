@@ -231,6 +231,7 @@ interface CharacterDraft {
     plus2: AbilityBonusKey
     plus1: AbilityBonusKey
   }
+  abilityProficiencies: Record<AbilityKey, boolean>
   skillProficiencies: Record<string, boolean>
   skillExpertise: Record<string, boolean>
 }
@@ -367,6 +368,15 @@ const createDefaultAbilityAssignments = (): Record<AbilityKey, string> => ({
 const createDefaultAbilityBonuses = (): CharacterDraft['abilityBonuses'] => ({
   plus2: '',
   plus1: '',
+})
+
+const createDefaultAbilityProficiencies = (): CharacterDraft['abilityProficiencies'] => ({
+  str: false,
+  dex: false,
+  con: false,
+  int: false,
+  wis: false,
+  cha: false,
 })
 
 const createClassEntry = (className = characterCreationConfig.defaults.className, level = 1, subclass = ''): CharacterClassEntry => ({
@@ -852,6 +862,7 @@ const creationDraft = reactive<CharacterDraft>({
   abilityScores: createDefaultAbilityScores(),
   abilityAssignments: createDefaultAbilityAssignments(),
   abilityBonuses: createDefaultAbilityBonuses(),
+  abilityProficiencies: createDefaultAbilityProficiencies(),
   skillProficiencies: createDefaultSkillSelection(),
   skillExpertise: createDefaultSkillSelection(),
 })
@@ -1308,6 +1319,7 @@ const skillGroups = computed(() => {
   return abilityDefinitions.map((ability) => {
     const score = getFinalAbilityScore(ability.key)
     const abilityModifier = modifier(score)
+    const proficient = creationDraft.abilityProficiencies[ability.key]
     const skills = skillDefinitions
       .filter((skill) => skill.abilityKey === ability.key)
       .map((skill) => ({
@@ -1321,6 +1333,8 @@ const skillGroups = computed(() => {
       ...ability,
       score,
       modifier: abilityModifier,
+      save: abilityModifier + (proficient ? currentProficiencyBonus.value : 0),
+      proficient,
       skills,
     }
   })
@@ -1409,6 +1423,10 @@ const setAbilityBonus = (bonusType: 'plus2' | 'plus1', key: AbilityKey, checked:
   }
 }
 
+const setAbilityProficiency = (key: AbilityKey, checked: boolean) => {
+  creationDraft.abilityProficiencies[key] = checked
+}
+
 const setSkillProficiency = (skillKey: string, checked: boolean) => {
   creationDraft.skillProficiencies[skillKey] = checked
   if (!checked) {
@@ -1427,6 +1445,7 @@ const createAbilitiesFromDraft = (): Ability[] => {
   return abilityDefinitions.map((ability) => {
     const score = getFinalAbilityScore(ability.key)
     const baseModifier = modifier(score)
+    const proficient = creationDraft.abilityProficiencies[ability.key]
     const skills = skillDefinitions
       .filter((skill) => skill.abilityKey === ability.key)
       .map((skill) => ({
@@ -1439,7 +1458,8 @@ const createAbilitiesFromDraft = (): Ability[] => {
     return {
       ...ability,
       score,
-      save: baseModifier,
+      save: baseModifier + (proficient ? currentProficiencyBonus.value : 0),
+      proficient: proficient || undefined,
       skills,
     }
   })
@@ -1465,6 +1485,7 @@ const resetCreationDraft = () => {
   Object.assign(creationDraft.abilityScores, createDefaultAbilityScores())
   Object.assign(creationDraft.abilityAssignments, createDefaultAbilityAssignments())
   Object.assign(creationDraft.abilityBonuses, createDefaultAbilityBonuses())
+  Object.assign(creationDraft.abilityProficiencies, createDefaultAbilityProficiencies())
   Object.assign(creationDraft.skillProficiencies, createDefaultSkillSelection())
   Object.assign(creationDraft.skillExpertise, createDefaultSkillSelection())
   abilityRolls.value = []
@@ -1601,6 +1622,7 @@ export const useCharacters = () => ({
   isRollOptionUsed,
   assignRollToAbility,
   setAbilityBonus,
+  setAbilityProficiency,
   getAbilityBonus,
   getFinalAbilityScore,
   getSkillValue,
