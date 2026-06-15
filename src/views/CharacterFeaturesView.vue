@@ -183,8 +183,14 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -206,11 +212,13 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
 
       <div v-if="selectedCharacter.feats.length > 0" class="trait-grid">
         <article v-for="trait in selectedCharacter.feats" :key="trait.id" class="trait-card">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openTraitDialog('feats', trait.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeTrait('feats', trait.id)">删除</button>
+          <div class="trait-card-header">
+            <h3>{{ trait.title }}</h3>
+            <div class="trait-card-actions">
+              <button class="plain-button" type="button" @click="openTraitDialog('feats', trait.id)">编辑</button>
+              <button class="danger-button" type="button" @click="removeTrait('feats', trait.id)">删除</button>
+            </div>
           </div>
-          <h3>{{ trait.title }}</h3>
           <p class="trait-source">来源：{{ trait.source }}</p>
           <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
           <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
@@ -227,11 +235,13 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
 
       <div v-if="selectedCharacter.features.length > 0" class="trait-grid">
         <article v-for="trait in selectedCharacter.features" :key="trait.id" class="trait-card">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openTraitDialog('features', trait.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeTrait('features', trait.id)">删除</button>
+          <div class="trait-card-header">
+            <h3>{{ trait.title }}</h3>
+            <div class="trait-card-actions">
+              <button class="plain-button" type="button" @click="openTraitDialog('features', trait.id)">编辑</button>
+              <button class="danger-button" type="button" @click="removeTrait('features', trait.id)">删除</button>
+            </div>
           </div>
-          <h3>{{ trait.title }}</h3>
           <p class="trait-source">来源：{{ trait.source }}</p>
           <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
           <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
@@ -251,54 +261,56 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
             <button class="icon-button" type="button" aria-label="关闭编辑弹窗" @click="closeTraitDialog">×</button>
           </header>
 
-          <div class="trait-dialog-form">
-            <label v-if="activeKind === 'feats'" class="wide-field">
-              从配置选择专长
-              <el-select
-                v-model="selectedFeatId"
-                filterable
-                clearable
-                :disabled="traitDraft.useCustom"
-                placeholder="输入名称或来源快速查找"
-                @change="handleFeatSelectionChange"
-              >
-                <el-option
-                  v-for="feat in featOptions"
-                  :key="feat.id"
-                  :label="`${feat.name} · ${feat.source}`"
-                  :value="feat.id"
+          <div class="trait-dialog-scroll">
+            <div class="trait-dialog-form">
+              <label v-if="activeKind === 'feats'" class="wide-field">
+                从配置选择专长
+                <el-select
+                  v-model="selectedFeatId"
+                  filterable
+                  clearable
+                  :disabled="traitDraft.useCustom"
+                  placeholder="输入名称或来源快速查找"
+                  @change="handleFeatSelectionChange"
                 >
-                  <span>{{ feat.name }}</span>
-                  <small>{{ feat.source }}</small>
-                </el-option>
-              </el-select>
-            </label>
-            <label v-if="activeKind === 'feats'" class="checkbox-field wide-field">
-              <el-checkbox v-model="traitDraft.useCustom" @change="handleCustomModeChange" />
-              使用自定义专长
-            </label>
-            <label>
-              名称
-              <el-input v-model="traitDraft.title" :disabled="isFeatConfigMode" placeholder="例如：神射手" />
-            </label>
-            <label>
-              来源
-              <el-input v-model="traitDraft.source" :disabled="isFeatConfigMode" placeholder="例如：通用专长" />
-            </label>
-            <label class="wide-field">
-              先决条件
-              <el-input v-model="traitDraft.prerequisites" :disabled="isFeatConfigMode" placeholder="例如：等级 4+，敏捷 13+" />
-            </label>
-            <label class="wide-field">
-              描述
-              <el-input
-                v-model="traitDraft.description"
-                type="textarea"
-                :rows="6"
-                :disabled="isFeatConfigMode"
-                placeholder="填写规则效果、触发条件或使用说明"
-              />
-            </label>
+                  <el-option
+                    v-for="feat in featOptions"
+                    :key="feat.id"
+                    :label="`${feat.name} · ${feat.source}`"
+                    :value="feat.id"
+                  >
+                    <span>{{ feat.name }}</span>
+                    <small>{{ feat.source }}</small>
+                  </el-option>
+                </el-select>
+              </label>
+              <label v-if="activeKind === 'feats'" class="checkbox-field wide-field">
+                <el-checkbox v-model="traitDraft.useCustom" @change="handleCustomModeChange" />
+                使用自定义专长
+              </label>
+              <label>
+                名称
+                <el-input v-model="traitDraft.title" :disabled="isFeatConfigMode" placeholder="例如：神射手" />
+              </label>
+              <label>
+                来源
+                <el-input v-model="traitDraft.source" :disabled="isFeatConfigMode" placeholder="例如：通用专长" />
+              </label>
+              <label class="wide-field">
+                先决条件
+                <el-input v-model="traitDraft.prerequisites" :disabled="isFeatConfigMode" placeholder="例如：等级 4+，敏捷 13+" />
+              </label>
+              <label class="wide-field">
+                描述
+                <el-input
+                  v-model="traitDraft.description"
+                  type="textarea"
+                  :rows="6"
+                  :disabled="isFeatConfigMode"
+                  placeholder="填写规则效果、触发条件或使用说明"
+                />
+              </label>
+            </div>
           </div>
 
           <footer>

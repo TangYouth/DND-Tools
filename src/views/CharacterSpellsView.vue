@@ -333,8 +333,14 @@ const adjustSlot = (level: number, delta: number) => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -354,8 +360,8 @@ const adjustSlot = (level: number, delta: number) => {
           <h2>法术位管理</h2>
         </div>
         <div class="spell-panel-actions">
-          <button class="primary-button" type="button" @click="restoreAllSlots">恢复全部法术位</button>
-          <button class="plain-button" type="button" @click="openSlotEditor">编辑法术位</button>
+          <button class="primary-button" type="button" @click="restoreAllSlots">恢复全部</button>
+          <button class="plain-button" type="button" @click="openSlotEditor">编辑</button>
         </div>
       </header>
 
@@ -421,33 +427,33 @@ const adjustSlot = (level: number, delta: number) => {
 
       <div v-else-if="filteredSpells.length > 0" class="spell-card-grid">
         <article v-for="spell in filteredSpells" :key="spell.id" class="spell-card" :class="{ prepared: spell.level > 0 && spell.prepared }">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openSpellDialog(spell.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeSpell(spell.id)">删除</button>
-          </div>
           <header>
             <div>
               <h3>{{ spell.name }}</h3>
               <p>{{ getSpellLevelLabel(spell.level) }} · {{ spell.school }}</p>
+            </div>
+            <div class="trait-card-actions spell-card-actions">
+              <button class="plain-button" type="button" @click="openSpellDialog(spell.id)">编辑</button>
+              <button class="danger-button" type="button" @click="removeSpell(spell.id)">删除</button>
             </div>
           </header>
 
           <dl class="spell-meta-grid">
             <div>
               <dt>施法时间</dt>
-              <dd>{{ spell.castingTime }}</dd>
+              <dd :title="spell.castingTime">{{ spell.castingTime }}</dd>
             </div>
             <div>
               <dt>施法距离</dt>
-              <dd>{{ spell.range }}</dd>
+              <dd :title="spell.range">{{ spell.range }}</dd>
             </div>
             <div>
               <dt>法术成分</dt>
-              <dd>{{ spell.components }}</dd>
+              <dd :title="spell.components">{{ spell.components }}</dd>
             </div>
             <div>
               <dt>持续时间</dt>
-              <dd>{{ spell.duration }}</dd>
+              <dd :title="spell.duration">{{ spell.duration }}</dd>
             </div>
           </dl>
 
@@ -471,11 +477,13 @@ const adjustSlot = (level: number, delta: number) => {
             <button class="icon-button" type="button" aria-label="关闭法术位编辑" @click="closeSlotEditor">×</button>
           </header>
 
-          <div class="slot-editor-grid">
-            <label v-for="level in spellSlotLevels" :key="level">
-              {{ level }}环最大法术位
-              <el-input-number v-model="ensureSpellSlot(level).max" :min="0" controls-position="right" />
-            </label>
+          <div class="trait-dialog-scroll">
+            <div class="slot-editor-grid">
+              <label v-for="level in spellSlotLevels" :key="level">
+                {{ level }}环最大法术位
+                <el-input-number v-model="ensureSpellSlot(level).max" :min="0" controls-position="right" />
+              </label>
+            </div>
           </div>
 
           <footer>
@@ -497,78 +505,80 @@ const adjustSlot = (level: number, delta: number) => {
             <button class="icon-button" type="button" aria-label="关闭法术编辑" @click="closeSpellDialog">×</button>
           </header>
 
-          <div class="spell-dialog-form">
-            <label>
-              环阶
-              <el-select v-model="spellDraft.level" placeholder="选择环阶" @change="handleSpellLevelChange">
-                <el-option v-for="level in spellLevels" :key="level" :label="getSpellLevelLabel(level)" :value="level" />
-              </el-select>
-            </label>
-            <label>
-              选择法术
-              <el-select
-                v-model="selectedSpellConfigId"
-                filterable
-                clearable
-                :disabled="spellDraft.useCustom"
-                placeholder="输入法术名或学派快速查找"
-                @change="handleSpellConfigSelectionChange"
-              >
-                <el-option
-                  v-for="spell in currentLevelSpellOptions"
-                  :key="spell.id"
-                  :label="`${spell.name} · ${spell.school}`"
-                  :value="spell.id"
+          <div class="trait-dialog-scroll">
+            <div class="spell-dialog-form">
+              <label>
+                环阶
+                <el-select v-model="spellDraft.level" placeholder="选择环阶" @change="handleSpellLevelChange">
+                  <el-option v-for="level in spellLevels" :key="level" :label="getSpellLevelLabel(level)" :value="level" />
+                </el-select>
+              </label>
+              <label>
+                选择法术
+                <el-select
+                  v-model="selectedSpellConfigId"
+                  filterable
+                  clearable
+                  :disabled="spellDraft.useCustom"
+                  placeholder="输入法术名或学派快速查找"
+                  @change="handleSpellConfigSelectionChange"
                 >
-                  <span>{{ spell.name }}</span>
-                  <small>{{ spell.school }}</small>
-                </el-option>
-              </el-select>
-            </label>
-            <label class="checkbox-field spell-custom-field">
-              <el-checkbox v-model="spellDraft.useCustom" @change="handleSpellCustomModeChange" />
-              使用自定义法术
-            </label>
-            <label class="wide-field">
-              名称
-              <el-input v-model="spellDraft.name" :disabled="isSpellConfigMode" placeholder="例如：火焰箭" />
-            </label>
-            <label>
-              学派
-              <el-select v-model="spellDraft.school" :disabled="isSpellConfigMode" placeholder="选择学派">
-                <el-option v-for="school in spellSchools" :key="school" :label="school" :value="school" />
-              </el-select>
-            </label>
-            <label>
-              施法时间
-              <el-input v-model="spellDraft.castingTime" :disabled="isSpellConfigMode" placeholder="例如：1 动作" />
-            </label>
-            <label>
-              施法距离
-              <el-input v-model="spellDraft.range" :disabled="isSpellConfigMode" placeholder="例如：120 尺" />
-            </label>
-            <label>
-              法术成分
-              <el-input v-model="spellDraft.components" :disabled="isSpellConfigMode" placeholder="例如：V / S / M" />
-            </label>
-            <label>
-              持续时间
-              <el-input v-model="spellDraft.duration" :disabled="isSpellConfigMode" placeholder="例如：瞬时" />
-            </label>
-            <label v-if="spellDraft.level > 0" class="checkbox-field spell-prepared-field">
-              <el-checkbox v-model="spellDraft.prepared" />
-              已准备
-            </label>
-            <label class="wide-field">
-              描述
-              <el-input
-                v-model="spellDraft.description"
-                type="textarea"
-                :rows="6"
-                :disabled="isSpellConfigMode"
-                placeholder="填写法术效果、伤害、豁免或特殊说明"
-              />
-            </label>
+                  <el-option
+                    v-for="spell in currentLevelSpellOptions"
+                    :key="spell.id"
+                    :label="`${spell.name} · ${spell.school}`"
+                    :value="spell.id"
+                  >
+                    <span>{{ spell.name }}</span>
+                    <small>{{ spell.school }}</small>
+                  </el-option>
+                </el-select>
+              </label>
+              <label class="checkbox-field spell-custom-field">
+                <el-checkbox v-model="spellDraft.useCustom" @change="handleSpellCustomModeChange" />
+                使用自定义法术
+              </label>
+              <label class="wide-field">
+                名称
+                <el-input v-model="spellDraft.name" :disabled="isSpellConfigMode" placeholder="例如：火焰箭" />
+              </label>
+              <label>
+                学派
+                <el-select v-model="spellDraft.school" :disabled="isSpellConfigMode" placeholder="选择学派">
+                  <el-option v-for="school in spellSchools" :key="school" :label="school" :value="school" />
+                </el-select>
+              </label>
+              <label>
+                施法时间
+                <el-input v-model="spellDraft.castingTime" :disabled="isSpellConfigMode" placeholder="例如：1 动作" />
+              </label>
+              <label>
+                施法距离
+                <el-input v-model="spellDraft.range" :disabled="isSpellConfigMode" placeholder="例如：120 尺" />
+              </label>
+              <label>
+                法术成分
+                <el-input v-model="spellDraft.components" :disabled="isSpellConfigMode" placeholder="例如：V / S / M" />
+              </label>
+              <label>
+                持续时间
+                <el-input v-model="spellDraft.duration" :disabled="isSpellConfigMode" placeholder="例如：瞬时" />
+              </label>
+              <label v-if="spellDraft.level > 0" class="checkbox-field spell-prepared-field">
+                <el-checkbox v-model="spellDraft.prepared" />
+                已准备
+              </label>
+              <label class="wide-field">
+                描述
+                <el-input
+                  v-model="spellDraft.description"
+                  type="textarea"
+                  :rows="6"
+                  :disabled="isSpellConfigMode"
+                  placeholder="填写法术效果、伤害、豁免或特殊说明"
+                />
+              </label>
+            </div>
           </div>
 
           <footer>
