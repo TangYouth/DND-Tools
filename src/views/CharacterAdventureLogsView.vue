@@ -118,8 +118,14 @@ const stopDraggingLog = () => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -155,7 +161,7 @@ const stopDraggingLog = () => {
           @drop="reorderLog(log.id)"
         >
           <div class="adventure-log-icon">✦</div>
-          <div>
+          <div class="adventure-log-content">
             <h3>{{ log.title }}</h3>
             <p>{{ log.description || '暂无描述。' }}</p>
           </div>
@@ -180,15 +186,17 @@ const stopDraggingLog = () => {
             <button class="icon-button" type="button" aria-label="关闭日志编辑" @click="closeLogDialog">×</button>
           </header>
 
-          <div class="adventure-log-dialog-form">
-            <label>
-              标题
-              <el-input v-model="logDraft.title" placeholder="例如：哥布林洞穴探索" />
-            </label>
-            <label>
-              描述
-              <el-input v-model="logDraft.description" type="textarea" :rows="7" placeholder="记录获得的奖励、线索、遭遇或队伍决定" />
-            </label>
+          <div class="trait-dialog-scroll">
+            <div class="adventure-log-dialog-form">
+              <label>
+                标题
+                <el-input v-model="logDraft.title" placeholder="例如：哥布林洞穴探索" />
+              </label>
+              <label>
+                描述
+                <el-input v-model="logDraft.description" type="textarea" :rows="7" placeholder="记录获得的奖励、线索、遭遇或队伍决定" />
+              </label>
+            </div>
           </div>
 
           <footer>

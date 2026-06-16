@@ -221,8 +221,14 @@ const saveTemporaryHp = () => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -333,59 +339,61 @@ const saveTemporaryHp = () => {
             <button class="icon-button" type="button" aria-label="关闭生物编辑" @click="closeCreatureDialog">×</button>
           </header>
 
-          <div class="creature-dialog-form">
-            <label>
-              名称
-              <el-input v-model="creatureDraft.name" placeholder="例如：天界灵魄" />
-            </label>
-            <label>
-              种族
-              <el-input v-model="creatureDraft.species" placeholder="例如：天族" />
-            </label>
-            <label>
-              体型
-              <el-input v-model="creatureDraft.size" placeholder="例如：大型" />
-            </label>
-            <label>
-              阵营
-              <el-input v-model="creatureDraft.alignment" placeholder="例如：中立" />
-            </label>
-            <label>
-              AC
-              <el-input-number v-model="creatureDraft.ac" :min="0" controls-position="right" />
-            </label>
-            <label>
-              当前 HP
-              <el-input-number v-model="creatureDraft.hpCurrent" :min="0" controls-position="right" />
-            </label>
-            <label>
-              最大 HP
-              <el-input-number v-model="creatureDraft.hpMax" :min="1" controls-position="right" />
-            </label>
-            <label>
-              临时 HP
-              <el-input-number v-model="creatureDraft.hpTemporary" :min="0" controls-position="right" />
-            </label>
-            <label>
-              速度
-              <el-input v-model="creatureDraft.speed" placeholder="例如：30 尺，飞行 40 尺" />
-            </label>
-            <label v-for="ability in abilityFields" :key="ability.key">
-              {{ ability.label }}
-              <el-input-number v-model="creatureDraft.abilities[ability.key]" :min="1" controls-position="right" />
-            </label>
-            <label>
-              抗性
-              <el-input v-model="creatureDraft.resistances" placeholder="例如：光耀" />
-            </label>
-            <label>
-              免疫
-              <el-input v-model="creatureDraft.immunities" placeholder="例如：魅惑，恐慌" />
-            </label>
-            <label class="wide-field">
-              描述
-              <el-input v-model="creatureDraft.description" type="textarea" :rows="7" placeholder="填写动作、特性、攻击方式或备注" />
-            </label>
+          <div class="trait-dialog-scroll">
+            <div class="creature-dialog-form">
+              <label>
+                名称
+                <el-input v-model="creatureDraft.name" placeholder="例如：天界灵魄" />
+              </label>
+              <label>
+                种族
+                <el-input v-model="creatureDraft.species" placeholder="例如：天族" />
+              </label>
+              <label>
+                体型
+                <el-input v-model="creatureDraft.size" placeholder="例如：大型" />
+              </label>
+              <label>
+                阵营
+                <el-input v-model="creatureDraft.alignment" placeholder="例如：中立" />
+              </label>
+              <label>
+                AC
+                <el-input-number v-model="creatureDraft.ac" :min="0" controls-position="right" />
+              </label>
+              <label>
+                当前 HP
+                <el-input-number v-model="creatureDraft.hpCurrent" :min="0" controls-position="right" />
+              </label>
+              <label>
+                最大 HP
+                <el-input-number v-model="creatureDraft.hpMax" :min="1" controls-position="right" />
+              </label>
+              <label>
+                临时 HP
+                <el-input-number v-model="creatureDraft.hpTemporary" :min="0" controls-position="right" />
+              </label>
+              <label>
+                速度
+                <el-input v-model="creatureDraft.speed" placeholder="例如：30 尺，飞行 40 尺" />
+              </label>
+              <label v-for="ability in abilityFields" :key="ability.key">
+                {{ ability.label }}
+                <el-input-number v-model="creatureDraft.abilities[ability.key]" :min="1" controls-position="right" />
+              </label>
+              <label>
+                抗性
+                <el-input v-model="creatureDraft.resistances" placeholder="例如：光耀" />
+              </label>
+              <label>
+                免疫
+                <el-input v-model="creatureDraft.immunities" placeholder="例如：魅惑，恐慌" />
+              </label>
+              <label class="wide-field">
+                描述
+                <el-input v-model="creatureDraft.description" type="textarea" :rows="7" placeholder="填写动作、特性、攻击方式或备注" />
+              </label>
+            </div>
           </div>
 
           <footer>

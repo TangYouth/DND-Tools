@@ -2437,6 +2437,7 @@ h1 {
 }
 
 .adventure-log-card {
+  position: relative;
   display: grid;
   grid-template-columns: 88px minmax(0, 1fr) auto;
   align-items: center;
@@ -2475,6 +2476,10 @@ h1 {
   font-size: 24px;
 }
 
+.adventure-log-content {
+  min-width: 0;
+}
+
 .adventure-log-card p {
   margin: 0;
   color: #3f3429;
@@ -2504,9 +2509,20 @@ h1 {
   gap: 14px;
 }
 
+.adventure-log-dialog {
+  width: min(680px, 100%);
+}
+
+.adventure-log-dialog-form .el-input,
+.adventure-log-dialog-form .el-textarea {
+  width: 100%;
+}
+
 .creature-panel {
   display: grid;
   gap: 22px;
+  overflow: hidden;
+  min-width: 0;
   margin-bottom: 18px;
   padding: 26px;
   border: 1px solid var(--line);
@@ -2533,12 +2549,15 @@ h1 {
   display: grid;
   grid-template-columns: minmax(280px, 0.34fr) minmax(0, 1fr);
   gap: 18px;
+  min-width: 0;
 }
 
 .creature-list-panel {
   display: grid;
   align-content: start;
   gap: 12px;
+  min-width: 0;
+  max-width: 100%;
 }
 
 .creature-list-row {
@@ -2546,6 +2565,7 @@ h1 {
   grid-template-columns: 64px minmax(0, 1fr);
   gap: 8px 14px;
   align-items: center;
+  min-width: 0;
   min-height: 112px;
   padding: 14px;
   border: 1px solid var(--line);
@@ -2596,6 +2616,7 @@ h1 {
 
 .add-creature-card {
   display: grid;
+  min-width: 0;
   min-height: 126px;
   align-content: center;
   justify-items: center;
@@ -2784,6 +2805,16 @@ h1 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+}
+
+.creature-dialog {
+  width: min(900px, 100%);
+}
+
+.creature-dialog-form .el-input,
+.creature-dialog-form .el-input-number,
+.creature-dialog-form .el-textarea {
+  width: 100%;
 }
 
 .creature-dialog-form .wide-field {
@@ -4739,28 +4770,157 @@ textarea {
 
   .adventure-log-card {
     grid-template-columns: 1fr;
+    min-height: 0;
+    padding: 16px;
+  }
+
+  .adventure-log-panel > header {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .adventure-log-panel > header .add-log-button {
+    flex: 0 0 auto;
+    margin-left: auto;
+    white-space: nowrap;
+  }
+
+  .adventure-log-card h3 {
+    overflow: hidden;
+    margin: 0 0 10px;
+    padding-right: 92px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .adventure-log-actions {
+    position: absolute;
+    top: 11px;
+    right: 12px;
     justify-content: flex-end;
   }
 
+  .adventure-log-icon,
+  .adventure-log-actions .drag-handle {
+    display: none;
+  }
+
   .creature-detail-card {
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    justify-self: stretch;
+    overflow: hidden;
     padding: 18px;
   }
 
+  .creature-workspace {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .creature-list-panel {
+    display: flex;
+    gap: 12px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 0 8px 8px;
+    scrollbar-width: thin;
+    scroll-padding-inline: 8px;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .creature-list-row,
+  .add-creature-card {
+    flex: 0 0 min(68vw, 232px);
+    max-width: calc(100% - 16px);
+    min-height: 106px;
+    scroll-snap-align: start;
+  }
+
+  .creature-list-row {
+    grid-template-columns: 1fr;
+    align-content: center;
+  }
+
+  .creature-list-row span,
+  .add-creature-card span,
   .creature-portrait {
-    width: 96px;
-    height: 96px;
-    font-size: 40px;
+    display: none;
+  }
+
+  .creature-detail-card > header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 88px;
+    gap: 12px;
+    align-items: start;
+    min-width: 0;
+  }
+
+  .creature-detail-card > header > div:not(.creature-detail-actions) {
+    min-width: 0;
+  }
+
+  .creature-detail-card h3 {
+    overflow: hidden;
+    margin-right: 0;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 28px;
+  }
+
+  .creature-detail-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    align-items: start;
+    justify-self: end;
+    justify-content: end;
+    width: 88px;
+  }
+
+  .creature-detail-actions .plain-button {
+    grid-column: 1 / -1;
+    width: 100%;
+    min-width: 0;
+    padding: 0 8px;
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .creature-detail-actions .icon-button {
+    width: 40px;
+    min-width: 0;
+    padding: 0;
+  }
+
+  .creature-ability-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .creature-ability-grid div {
-    border-right: 0;
+    border-right: 1px solid rgba(216, 201, 181, 0.72);
     border-bottom: 1px solid rgba(216, 201, 181, 0.72);
   }
 
+  .creature-ability-grid div:nth-child(3n) {
+    border-right: 0;
+  }
+
+  .creature-ability-grid div:nth-last-child(-n + 3) {
+    border-bottom: 0;
+  }
+
   .creature-ability-grid div:last-child {
+    border-right: 0;
     border-bottom: 0;
   }
 
