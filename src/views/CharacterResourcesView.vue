@@ -250,8 +250,14 @@ const removeResource = (resourceId: string) => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -283,7 +289,7 @@ const removeResource = (resourceId: string) => {
           <div class="hit-die-icon">
             <img :src="hitDieIcon" alt="" />
           </div>
-          <div>
+          <div class="hit-die-info">
             <h3>生命骰 <small>职业资源</small></h3>
             <p>{{ resource.className }} · {{ resource.die }}</p>
           </div>
@@ -311,12 +317,14 @@ const removeResource = (resourceId: string) => {
 
       <div v-if="selectedCharacter.resources.length > 0" class="custom-resource-grid">
         <article v-for="resource in selectedCharacter.resources" :key="resource.id" class="custom-resource-card">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openResourceDialog(resource.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeResource(resource.id)">删除</button>
-          </div>
           <div class="custom-resource-icon">✦</div>
-          <h3>{{ resource.name }}</h3>
+          <div class="custom-resource-card-header">
+            <h3>{{ resource.name }}</h3>
+            <div class="trait-card-actions custom-resource-actions">
+              <button class="plain-button" type="button" @click="openResourceDialog(resource.id)">编辑</button>
+              <button class="danger-button" type="button" @click="removeResource(resource.id)">删除</button>
+            </div>
+          </div>
           <strong>{{ resource.current }} / {{ resource.max }}</strong>
           <div class="resource-stepper">
             <button type="button" @click="adjustCustomResource(resource.id, -1)">−</button>
@@ -365,43 +373,45 @@ const removeResource = (resourceId: string) => {
             <button class="icon-button" type="button" aria-label="关闭生命骰使用" @click="closeHitDieUseDialog">×</button>
           </header>
 
-          <div class="hit-die-use-summary">
-            <div>
-              <span>当前血量</span>
-              <strong>{{ form.hp.current }} / {{ form.hp.max }}</strong>
+          <div class="trait-dialog-scroll hit-die-use-scroll">
+            <div class="hit-die-use-summary">
+              <div>
+                <span>当前血量</span>
+                <strong>{{ form.hp.current }} / {{ form.hp.max }}</strong>
+              </div>
+              <div>
+                <span>生命骰</span>
+                <strong>{{ usingHitDieResource?.current ?? 0 }} / {{ usingHitDieResource?.max ?? 0 }}</strong>
+              </div>
+              <div>
+                <span>体质调整值</span>
+                <strong>{{ constitutionModifier >= 0 ? `+${constitutionModifier}` : constitutionModifier }}</strong>
+              </div>
             </div>
-            <div>
-              <span>生命骰</span>
-              <strong>{{ usingHitDieResource?.current ?? 0 }} / {{ usingHitDieResource?.max ?? 0 }}</strong>
-            </div>
-            <div>
-              <span>体质调整值</span>
-              <strong>{{ constitutionModifier >= 0 ? `+${constitutionModifier}` : constitutionModifier }}</strong>
-            </div>
-          </div>
 
-          <div class="hit-die-use-controls">
-            <label>
-              使用数量
-              <el-input-number
-                v-model="hitDieUseDraft.count"
-                :min="1"
-                :max="Math.max(1, usingHitDieResource?.current ?? 1)"
-                controls-position="right"
-                :disabled="isRollingHitDice"
-              />
-            </label>
-            <button class="primary-button" type="button" :disabled="isRollingHitDice || !usingHitDieResource?.current" @click="startHitDieRoll">
-              开始投掷
-            </button>
-          </div>
-
-          <div class="hit-die-roll-panel" :class="{ rolling: isRollingHitDice }">
-            <span v-if="displayedHitDieRollResults.length === 0">选择数量后开始投掷。</span>
-            <div v-else class="hit-die-roll-list">
-              <b v-for="(roll, index) in displayedHitDieRollResults" :key="index">{{ roll }}</b>
+            <div class="hit-die-use-controls">
+              <label>
+                使用数量
+                <el-input-number
+                  v-model="hitDieUseDraft.count"
+                  :min="1"
+                  :max="Math.max(1, usingHitDieResource?.current ?? 1)"
+                  controls-position="right"
+                  :disabled="isRollingHitDice"
+                />
+              </label>
+              <button class="primary-button" type="button" :disabled="isRollingHitDice || !usingHitDieResource?.current" @click="startHitDieRoll">
+                开始投掷
+              </button>
             </div>
-            <strong v-if="hitDieRollResults.length > 0">本次恢复 {{ hitDieRecoveryTotal }}</strong>
+
+            <div class="hit-die-roll-panel" :class="{ rolling: isRollingHitDice }">
+              <span v-if="displayedHitDieRollResults.length === 0">选择数量后开始投掷。</span>
+              <div v-else class="hit-die-roll-list">
+                <b v-for="(roll, index) in displayedHitDieRollResults" :key="index">{{ roll }}</b>
+              </div>
+              <strong v-if="hitDieRollResults.length > 0">本次恢复 {{ hitDieRecoveryTotal }}</strong>
+            </div>
           </div>
 
           <footer>

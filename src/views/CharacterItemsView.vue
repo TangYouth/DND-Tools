@@ -162,8 +162,14 @@ const canAttune = (itemId: string) => {
         <p class="character-subtitle">{{ selectedCharacter.race }} / {{ classSummary }}</p>
       </div>
       <div class="topbar-actions">
-        <button class="plain-button" type="button" @click="exportSelectedCharacter">导出</button>
-        <button class="danger-button" type="button" @click="deleteCurrentCharacter">删除</button>
+        <button class="plain-button compact-action-button export-action" type="button" aria-label="导出角色" @click="exportSelectedCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">导出</span>
+        </button>
+        <button class="danger-button compact-action-button delete-action" type="button" aria-label="删除角色" @click="deleteCurrentCharacter">
+          <span class="action-icon" aria-hidden="true"></span>
+          <span class="action-text">删除</span>
+        </button>
       </div>
     </header>
 
@@ -224,13 +230,14 @@ const canAttune = (itemId: string) => {
 
       <div class="item-card-grid">
         <article v-for="item in equipmentItems" :key="item.id" class="inventory-item-card" :class="{ attuned: item.attuned }">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openItemDialog('equipment', item.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
-          </div>
-          <div class="item-card-icon">{{ item.name.slice(0, 1) }}</div>
           <div class="item-card-body">
-            <h3>{{ item.name }}</h3>
+            <div class="item-card-title-row">
+              <h3>{{ item.name }}</h3>
+              <div class="trait-card-actions">
+                <button class="plain-button" type="button" @click="openItemDialog('equipment', item.id)">编辑</button>
+                <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
+              </div>
+            </div>
             <strong>{{ item.value }} GP <small>x {{ item.quantity }}</small></strong>
             <p>{{ item.description || '暂无描述。' }}</p>
           </div>
@@ -261,13 +268,14 @@ const canAttune = (itemId: string) => {
 
       <div class="item-card-grid">
         <article v-for="item in backpackItems" :key="item.id" class="inventory-item-card" :class="{ attuned: item.attuned }">
-          <div class="trait-card-actions">
-            <button class="plain-button" type="button" @click="openItemDialog('backpack', item.id)">编辑</button>
-            <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
-          </div>
-          <div class="item-card-icon">{{ item.name.slice(0, 1) }}</div>
           <div class="item-card-body">
-            <h3>{{ item.name }}</h3>
+            <div class="item-card-title-row">
+              <h3>{{ item.name }}</h3>
+              <div class="trait-card-actions">
+                <button class="plain-button" type="button" @click="openItemDialog('backpack', item.id)">编辑</button>
+                <button class="danger-button" type="button" @click="removeItem(item.id)">删除</button>
+              </div>
+            </div>
             <strong>{{ item.value }} GP <small>x {{ item.quantity }}</small></strong>
             <p>{{ item.description || '暂无描述。' }}</p>
           </div>
@@ -304,34 +312,36 @@ const canAttune = (itemId: string) => {
             <button class="icon-button" type="button" aria-label="关闭物品编辑" @click="closeItemDialog">×</button>
           </header>
 
-          <div class="item-dialog-form">
-            <label>
-              名称
-              <el-input v-model="itemDraft.name" placeholder="例如：防护披风" />
-            </label>
-            <label>
-              价值
-              <el-input-number v-model="itemDraft.value" :min="0" controls-position="right" />
-            </label>
-            <label>
-              数量
-              <el-input-number v-model="itemDraft.quantity" :min="1" controls-position="right" />
-            </label>
-            <label>
-              所属
-              <el-select v-model="itemDraft.location" placeholder="选择位置">
-                <el-option label="装备" value="equipment" />
-                <el-option label="背包" value="backpack" />
-              </el-select>
-            </label>
-            <label class="checkbox-field item-attunement-field">
-              <el-checkbox v-model="itemDraft.requiresAttunement" />
-              需要同调
-            </label>
-            <label class="wide-field">
-              描述
-              <el-input v-model="itemDraft.description" type="textarea" :rows="5" placeholder="填写物品效果、用途或备注" />
-            </label>
+          <div class="trait-dialog-scroll">
+            <div class="item-dialog-form">
+              <label>
+                名称
+                <el-input v-model="itemDraft.name" placeholder="例如：防护披风" />
+              </label>
+              <label>
+                价值
+                <el-input-number v-model="itemDraft.value" :min="0" controls-position="right" />
+              </label>
+              <label>
+                数量
+                <el-input-number v-model="itemDraft.quantity" :min="1" controls-position="right" />
+              </label>
+              <label>
+                所属
+                <el-select v-model="itemDraft.location" placeholder="选择位置">
+                  <el-option label="装备" value="equipment" />
+                  <el-option label="背包" value="backpack" />
+                </el-select>
+              </label>
+              <label class="checkbox-field item-attunement-field">
+                <el-checkbox v-model="itemDraft.requiresAttunement" />
+                需要同调
+              </label>
+              <label class="wide-field">
+                描述
+                <el-input v-model="itemDraft.description" type="textarea" :rows="5" placeholder="填写物品效果、用途或备注" />
+              </label>
+            </div>
           </div>
 
           <footer>

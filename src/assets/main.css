@@ -1915,30 +1915,55 @@ h1 {
 .custom-resource-card {
   position: relative;
   display: grid;
-  grid-template-columns: 64px 1fr;
-  gap: 12px 16px;
+  grid-template-columns: 1fr;
+  gap: 12px;
   align-content: start;
+  justify-items: center;
   min-height: 0;
-  padding: 22px;
+  padding: 54px 22px 22px;
+  text-align: center;
 }
 
 .custom-resource-icon {
-  grid-row: span 2;
+  grid-column: 1;
   width: 58px;
   height: 58px;
+  justify-self: center;
   color: #6d4eaa;
   background: rgba(102, 73, 139, 0.12);
   font-size: 26px;
 }
 
+.custom-resource-card-header {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  text-align: center;
+}
+
 .custom-resource-card h3 {
   margin: 0;
-  padding-right: 112px;
+  min-width: 0;
   font-size: 22px;
+  overflow-wrap: anywhere;
+}
+
+.custom-resource-actions {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  gap: 8px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.custom-resource-actions button {
+  min-width: 58px;
 }
 
 .custom-resource-card .resource-stepper {
-  grid-column: 1 / -1;
+  grid-column: 1;
   justify-self: center;
   margin-top: 4px;
 }
@@ -1983,6 +2008,11 @@ h1 {
 
 .hit-die-use-dialog {
   width: min(620px, 100%);
+}
+
+.hit-die-use-scroll {
+  display: grid;
+  gap: 14px;
 }
 
 .hit-die-use-summary {
@@ -2215,8 +2245,8 @@ h1 {
 .inventory-item-card {
   position: relative;
   display: grid;
-  grid-template-columns: 72px minmax(0, 1fr);
-  gap: 12px 14px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
   align-content: start;
   padding: 16px;
 }
@@ -2226,29 +2256,35 @@ h1 {
   background: rgba(255, 250, 241, 0.74);
 }
 
-.item-card-icon {
-  display: grid;
-  width: 56px;
-  height: 56px;
-  place-items: center;
-  border-radius: 999px;
-  color: #6d4a3a;
-  background: rgba(139, 88, 51, 0.12);
-  font-size: 24px;
-  font-weight: 900;
+.item-card-body {
+  min-width: 0;
 }
 
-.item-card-body {
+.item-card-title-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
   min-width: 0;
 }
 
 .item-card-body h3 {
   overflow: hidden;
   margin: 0 0 4px;
-  padding-right: 112px;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-size: 19px;
+}
+
+.item-card-title-row > .trait-card-actions {
+  position: static;
+  top: auto;
+  right: auto;
+  display: flex;
+  flex: 0 0 auto;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
 }
 
 .item-card-body strong {
@@ -2331,6 +2367,17 @@ h1 {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 140px 140px 170px;
   gap: 14px;
+}
+
+.item-dialog {
+  width: min(780px, 100%);
+}
+
+.item-dialog-form .el-input-number,
+.item-dialog-form .el-select,
+.item-dialog-form .el-input,
+.item-dialog-form .el-textarea {
+  width: 100%;
 }
 
 .item-dialog-form .wide-field {
@@ -4353,6 +4400,33 @@ textarea {
     grid-template-columns: 1fr;
   }
 
+  .gold-editor-card,
+  .attunement-status-card {
+    align-items: stretch;
+    justify-items: center;
+    gap: 14px;
+    text-align: center;
+  }
+
+  .gold-quick-controls {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .gold-quick-controls .el-input-number {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+
+  .attunement-status-card label {
+    width: 100%;
+  }
+
+  .attunement-status-card label .el-input-number {
+    width: 100%;
+  }
+
   .preview-card {
     position: static;
   }
@@ -4601,6 +4675,17 @@ textarea {
     align-items: center;
   }
 
+  .resource-management-panel > header {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .resource-management-panel > header .spell-panel-actions {
+    align-items: center;
+    flex-direction: row;
+    margin-left: auto;
+  }
+
   .trait-panel > header .plain-button {
     flex: 0 0 auto;
     white-space: nowrap;
@@ -4686,38 +4771,96 @@ textarea {
     justify-items: stretch;
   }
 
+  .hit-die-card {
+    gap: 14px;
+    align-items: stretch;
+    padding: 18px;
+  }
+
+  .hit-die-icon {
+    justify-self: center;
+  }
+
+  .hit-die-info {
+    display: grid;
+    gap: 6px;
+    justify-items: center;
+    text-align: center;
+  }
+
+  .hit-die-card h3 {
+    justify-content: center;
+    margin-bottom: 0;
+  }
+
+  .resource-count-block {
+    justify-items: center;
+    padding-top: 12px;
+    border-top: 1px solid rgba(216, 201, 181, 0.72);
+    text-align: center;
+  }
+
+  .resource-count-block strong {
+    text-align: center;
+  }
+
+  .hit-die-card .resource-stepper {
+    width: 100%;
+  }
+
   .hit-die-actions,
-  .hit-die-use-controls,
-  .hit-die-use-summary {
+  .hit-die-use-controls {
     grid-template-columns: 1fr;
   }
 
   .hit-die-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     justify-content: stretch;
   }
 
+  .hit-die-actions button {
+    width: 100%;
+  }
+
   .hit-die-use-summary div {
-    border-right: 0;
-    border-bottom: 1px solid rgba(216, 201, 181, 0.72);
+    gap: 5px;
+    min-width: 0;
+    padding: 10px 6px;
+    border-right: 1px solid rgba(216, 201, 181, 0.72);
+    border-bottom: 0;
+    text-align: center;
   }
 
   .hit-die-use-summary div:last-child {
-    border-bottom: 0;
+    border-right: 0;
+  }
+
+  .hit-die-use-summary {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .hit-die-use-summary span {
+    font-size: 11px;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .hit-die-use-summary strong {
+    font-size: 16px;
+    line-height: 1.15;
+    white-space: nowrap;
   }
 
   .gold-quick-controls,
   .attunement-status-card p {
     justify-content: stretch;
-    text-align: left;
+    text-align: center;
   }
 
-  .custom-resource-card {
-    grid-template-columns: 1fr;
-  }
-
-  .custom-resource-icon,
-  .custom-resource-card .resource-stepper {
-    grid-column: 1;
+  .gold-editor-card,
+  .attunement-status-card {
+    justify-items: center;
   }
 
   .spell-meta-grid div,
