@@ -219,7 +219,9 @@ defineExpose({
           </div>
           <div class="dice-drawer-header-actions">
             <button class="plain-button" type="button" @click="isDiceHistoryOpen = !isDiceHistoryOpen">
-              ↺ 历史记录
+              <span aria-hidden="true">↺</span>
+              <span class="dice-history-label-full">历史记录</span>
+              <span class="dice-history-label-short">历史</span>
             </button>
             <button class="icon-button" type="button" aria-label="关闭骰子面板" @click="closeDicePanel">×</button>
           </div>

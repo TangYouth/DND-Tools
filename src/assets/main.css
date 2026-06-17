@@ -342,6 +342,10 @@ button {
   min-height: 42px;
 }
 
+.dice-history-label-short {
+  display: none;
+}
+
 .dice-tool-section {
   display: grid;
   gap: 18px;
@@ -4613,33 +4617,98 @@ textarea {
     padding: 22px 16px;
   }
 
-  .dice-drawer-header,
-  .dice-drawer-header-actions,
-  .dice-drawer-footer,
+  .dice-drawer-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px;
+  }
+
+  .dice-drawer-header-actions {
+    align-items: center;
+    align-self: start;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .dice-history-label-full {
+    display: none;
+  }
+
+  .dice-history-label-short {
+    display: inline;
+  }
+
+  .dice-drawer-header-actions .plain-button {
+    min-height: 38px;
+    padding: 0 10px;
+    white-space: nowrap;
+  }
+
+  .dice-drawer-header-actions .icon-button {
+    width: 38px;
+    min-width: 38px;
+    padding: 0;
+  }
+
   .dice-history-panel header {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
   }
 
   .dice-drawer-header h2 {
-    font-size: 30px;
+    font-size: 28px;
+  }
+
+  .dice-drawer-header small {
+    font-size: 12px;
   }
 
   .dice-option-row {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
   }
 
   .dice-option-row button {
+    flex: 0 0 54px;
+    min-height: 44px;
+    border-right: 1px solid var(--line);
     border-bottom: 1px solid var(--line);
   }
 
+  .dice-option-row .dice-plus-button {
+    flex-basis: 68px;
+  }
+
   .dice-type-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 2px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .dice-type-grid button {
+    flex: 0 0 72px;
+    min-height: 68px;
+  }
+
+  .dice-type-mark {
+    display: none;
+  }
+
+  .dice-type-plus {
+    flex-basis: 78px;
+    min-height: 68px;
   }
 
   .dice-custom-field,
-  .dice-result-panel,
-  .dice-drawer-footer,
   .dice-history-list article {
     grid-template-columns: 1fr;
   }
@@ -4652,13 +4721,51 @@ textarea {
     width: 100%;
   }
 
+  .dice-result-panel {
+    grid-template-columns: 0.8fr minmax(0, 1.25fr) 0.8fr;
+    min-height: 96px;
+  }
+
   .dice-result-panel > div {
-    border-right: 0;
-    border-bottom: 1px solid rgba(216, 201, 181, 0.75);
+    gap: 6px;
+    min-width: 0;
+    padding: 10px 6px;
+    border-right: 1px solid rgba(216, 201, 181, 0.75);
+    border-bottom: 0;
   }
 
   .dice-result-panel > div:last-child {
-    border-bottom: 0;
+    border-right: 0;
+  }
+
+  .dice-result-panel span {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  .dice-result-panel strong {
+    font-size: 32px;
+  }
+
+  .dice-roll-pills {
+    gap: 4px;
+  }
+
+  .dice-roll-pills b {
+    min-width: 28px;
+    min-height: 24px;
+    font-size: 14px;
+  }
+
+  .dice-drawer-footer {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 92px;
+    gap: 10px;
+  }
+
+  .dice-drawer-footer button {
+    min-height: 48px;
+    font-size: 16px;
   }
 
   .card-edit-actions {
