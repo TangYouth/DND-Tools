@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
 import backgroundIcon from '../components/icons/beijing.png'
@@ -64,6 +64,26 @@ onMounted(() => {
 
 const backToBoard = () => {
   router.push({ name: 'characters' })
+}
+
+const scrollToCreationTop = async () => {
+  await nextTick()
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+const setCreationStepAndScroll = (index: number) => {
+  creationStep.value = index
+  void scrollToCreationTop()
+}
+
+const goNextCreationStepAndScroll = () => {
+  goNextCreationStep()
+  void scrollToCreationTop()
+}
+
+const goPreviousCreationStepAndScroll = () => {
+  goPreviousCreationStep()
+  void scrollToCreationTop()
 }
 
 const completeCreation = () => {
@@ -175,14 +195,14 @@ onUnmounted(() => {
         class="step-item"
         :class="{ active: index === creationStep, completed: index < creationStep }"
         type="button"
-        @click="creationStep = index"
+        @click="setCreationStepAndScroll(index)"
       >
         <span>{{ step.index }}</span>
         <strong>{{ step.label }}</strong>
       </button>
     </nav>
 
-    <form v-if="currentCreationStep?.id === 'basic'" class="creation-panel" @submit.prevent="goNextCreationStep">
+    <form v-if="currentCreationStep?.id === 'basic'" class="creation-panel" @submit.prevent="goNextCreationStepAndScroll">
       <div class="creation-tip">兼职职业和子职业可在角色卡面板的基本信息中继续编辑。</div>
       <div class="creation-basic-layout">
         <section class="creation-form-column">
@@ -237,6 +257,15 @@ onUnmounted(() => {
               <el-input-number v-model="creationDraft.level" :min="1" :max="20" controls-position="right" />
             </label>
 
+            <label class="required-field mobile-choice-field">
+              <span class="field-label">阵营 <em>*</em></span>
+              <el-select v-model="creationDraft.alignment" placeholder="选择阵营">
+                <template v-for="row in characterCreationConfig.alignments" :key="row.join('-')">
+                  <el-option v-for="alignment in row" :key="alignment" :label="alignment" :value="alignment" />
+                </template>
+              </el-select>
+            </label>
+
             <fieldset class="alignment-field">
               <legend>阵营 <span>*</span></legend>
               <div class="alignment-grid">
@@ -270,6 +299,14 @@ onUnmounted(() => {
             <label v-if="creationDraft.background === CUSTOM_OPTION" class="custom-field">
               自定义背景
               <el-input v-model="creationDraft.customBackground" placeholder="输入背景名称" />
+            </label>
+
+            <label class="required-field mobile-choice-field">
+              <span class="field-label">体型 <em>*</em></span>
+              <el-select v-model="creationDraft.size" placeholder="选择体型">
+                <el-option v-for="size in characterCreationConfig.sizes" :key="size" :label="size" :value="size" />
+                <el-option label="自定义" :value="CUSTOM_OPTION" />
+              </el-select>
             </label>
 
             <fieldset class="size-field">
@@ -490,8 +527,8 @@ onUnmounted(() => {
       </div>
 
       <footer class="creation-footer">
-        <button class="plain-button large-action" type="button" @click="goPreviousCreationStep">‹ 上一步：基本信息</button>
-        <button class="primary-button large-action" type="button" :disabled="!isAbilityStepValid" @click="goNextCreationStep">
+        <button class="plain-button large-action" type="button" @click="goPreviousCreationStepAndScroll">‹ 上一步：基本信息</button>
+        <button class="primary-button large-action" type="button" :disabled="!isAbilityStepValid" @click="goNextCreationStepAndScroll">
           下一步：技能与熟练 ›
         </button>
       </footer>
@@ -556,8 +593,8 @@ onUnmounted(() => {
       </section>
 
       <footer class="creation-footer">
-        <button class="plain-button large-action" type="button" @click="goPreviousCreationStep">‹ 上一步：属性值</button>
-        <button class="primary-button large-action" type="button" @click="goNextCreationStep">
+        <button class="plain-button large-action" type="button" @click="goPreviousCreationStepAndScroll">‹ 上一步：属性值</button>
+        <button class="primary-button large-action" type="button" @click="goNextCreationStepAndScroll">
           下一步：完成 ›
         </button>
       </footer>
@@ -572,12 +609,12 @@ onUnmounted(() => {
         初始编辑已经完成，剩余部分可以在角色卡处进行编辑
       </p>
       <footer class="creation-footer">
-        <button class="plain-button" type="button" @click="goPreviousCreationStep">上一步</button>
+        <button class="plain-button" type="button" @click="goPreviousCreationStepAndScroll">上一步</button>
         <button
           v-if="currentCreationStep?.id !== 'finish'"
           class="primary-button large-action"
           type="button"
-          @click="goNextCreationStep"
+          @click="goNextCreationStepAndScroll"
         >
           下一步 ›
         </button>

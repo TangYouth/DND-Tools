@@ -3055,6 +3055,10 @@ h1 {
   color: var(--muted) !important;
 }
 
+.mobile-choice-field {
+  display: none !important;
+}
+
 .compact-field input {
   max-width: 110px;
 }
@@ -4354,15 +4358,33 @@ textarea {
     border-bottom: 1px solid var(--line);
   }
 
-  .creation-header,
-  .creation-footer {
-    align-items: stretch;
-    flex-direction: column;
+  .creation-header {
+    align-items: center;
+    flex-direction: row;
+  }
+
+  .creation-header h1 {
+    font-size: 30px;
+  }
+
+  .creation-header .plain-button {
+    flex: 0 0 auto;
+    white-space: nowrap;
   }
 
   .creation-steps {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
+    display: flex;
+    gap: 14px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 16px;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .step-item {
+    flex: 0 0 auto;
+    min-width: 112px;
   }
 
   .step-item::after {
@@ -4372,8 +4394,8 @@ textarea {
   .creation-form,
   .creation-form label,
   .creation-form fieldset {
-    grid-template-columns: 1fr;
-    gap: 8px;
+    grid-template-columns: 92px minmax(0, 1fr);
+    gap: 10px;
   }
 
   .creation-form label > input,
@@ -4386,7 +4408,7 @@ textarea {
   .story-field > span,
   .creation-form fieldset > .alignment-grid,
   .creation-form fieldset > .size-grid {
-    grid-column: 1;
+    grid-column: 2;
   }
 
   .field-label {
@@ -4398,7 +4420,6 @@ textarea {
   }
 
   .large-action {
-    width: 100%;
     min-width: 0;
   }
 
@@ -4463,11 +4484,15 @@ textarea {
   }
 
   .preview-card {
-    position: static;
+    display: none;
   }
 
   .roll-pool {
     grid-template-columns: 1fr;
+  }
+
+  .ability-preview-card {
+    display: none;
   }
 }
 
@@ -5145,24 +5170,91 @@ textarea {
     padding: 16px;
   }
 
-  .creation-steps,
-  .alignment-grid,
-  .size-grid {
+  .creation-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .creation-header h1 {
+    font-size: 28px;
+  }
+
+  .creation-header .plain-button {
+    min-height: 38px;
+    padding: 0 12px;
+  }
+
+  .creation-steps {
+    grid-template-columns: none;
+  }
+
+  .step-item {
+    min-width: 92px;
+    gap: 8px;
+  }
+
+  .step-item span {
+    width: 34px;
+    height: 34px;
+    font-size: 16px;
+  }
+
+  .step-item strong {
+    font-size: 14px;
+  }
+
+  .creation-form,
+  .creation-form label,
+  .creation-form fieldset {
+    grid-template-columns: 74px minmax(0, 1fr);
+    gap: 8px 10px;
+  }
+
+  .creation-form label,
+  .creation-form fieldset {
+    font-size: 15px;
+  }
+
+  .creation-form .story-field {
     grid-template-columns: 1fr;
   }
 
-  .alignment-grid button,
-  .size-grid button {
-    border-right: 0;
+  .creation-form .story-field > .el-textarea,
+  .story-field > span {
+    grid-column: 1;
   }
 
-  .alignment-grid button:nth-last-child(-n + 3) {
-    border-bottom: 1px solid var(--line);
+  .mobile-choice-field {
+    display: grid !important;
   }
 
-  .alignment-grid button:last-child,
-  .size-grid button:last-child {
-    border-bottom: 0;
+  .alignment-field,
+  .size-field {
+    display: none !important;
+  }
+
+  .creation-form label > input,
+  .creation-form label > .el-input,
+  .creation-form label > .el-input-number,
+  .creation-form label > .el-select,
+  .creation-form label > select,
+  .creation-form label > textarea,
+  .creation-form label > .el-textarea {
+    min-width: 0;
+  }
+
+  .creation-footer {
+    align-items: stretch;
+    flex-direction: row;
+  }
+
+  .creation-footer .large-action {
+    flex: 1 1 0;
+    min-width: 0;
+    min-height: 46px;
+    font-size: 15px;
   }
 
   .preview-row {
@@ -5175,44 +5267,184 @@ textarea {
     text-align: left;
   }
 
-  .mode-toggle,
-  .roll-actions,
+  .mode-toggle {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .roll-actions {
+    grid-template-columns: minmax(0, 50%);
+  }
+
+  .roll-actions .primary-button {
+    min-height: 44px;
+  }
+
   .roll-table-head,
-  .roll-table-row,
-  .ability-assignment-head,
-  .ability-assignment-row {
-    grid-template-columns: 1fr;
+  .roll-table-row {
+    grid-template-columns: 44px minmax(112px, 1fr) 58px 42px;
+    gap: 6px;
   }
 
   .roll-table-head,
   .ability-assignment-head {
+    display: grid;
+  }
+
+  .roll-table-head {
+    font-size: 11px;
+  }
+
+  .roll-table-row {
+    gap: 7px;
+    min-height: 42px;
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .dice-list {
+    gap: 4px;
+  }
+
+  .dice-list b {
+    width: 24px;
+    height: 24px;
+    font-size: 12px;
+  }
+
+  .roll-pool {
+    grid-template-columns: 68px minmax(0, 1fr);
+    gap: 8px;
+    align-items: start;
+  }
+
+  .roll-pool small {
+    grid-column: 1 / -1;
+  }
+
+  .roll-pool span {
+    min-width: 42px;
+    height: 32px;
+    font-size: 16px;
+  }
+
+  .ability-assignment-head,
+  .ability-assignment-row {
+    grid-template-columns: minmax(48px, 0.7fr) minmax(104px, 1fr) 34px 34px 38px;
+    gap: 10px;
+    min-height: 42px;
+    padding: 8px 10px;
+  }
+
+  .ability-assignment-head > span:nth-child(6),
+  .ability-assignment-row > span:nth-child(6) {
     display: none;
   }
 
-  .roll-table-row,
-  .ability-assignment-row,
-  .skill-row {
-    gap: 7px;
-    padding: 12px 14px;
+  .ability-assignment-head {
+    font-size: 11px;
   }
 
-  .roll-table-row strong,
-  .ability-assignment-row > span,
-  .skill-row > strong {
-    text-align: left;
+  .ability-assignment-row strong {
+    gap: 4px;
+    font-size: 13px;
   }
 
-  .ability-assignment-row > .el-checkbox,
-  .skill-row > .el-checkbox {
+  .ability-assignment-row strong img {
+    display: none;
+  }
+
+  .ability-assignment-row .el-input-number,
+  .ability-assignment-row .el-select {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
     justify-self: start;
   }
 
-  .skill-table-head {
+  .ability-assignment-row .el-select {
+    max-width: 128px;
+  }
+
+  .ability-assignment-row .el-input-number {
+    max-width: 118px;
+  }
+
+  .ability-assignment-row .el-input,
+  .ability-assignment-row .el-input__wrapper {
+    min-width: 0;
+  }
+
+  .ability-assignment-row > span {
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .ability-assignment-row > .el-checkbox {
+    justify-self: center;
+  }
+
+  .skill-count-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    font-size: 14px;
+  }
+
+  .skill-assignment-panel {
+    padding: 14px;
+  }
+
+  .skill-group-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .skill-group-card header {
+    min-height: 48px;
+    padding: 0 12px;
+  }
+
+  .skill-group-card header strong {
+    gap: 6px;
+    font-size: 17px;
+  }
+
+  .skill-group-card header strong img {
     display: none;
   }
 
+  .skill-group-card header em {
+    font-size: 13px;
+  }
+
+  .ability-proficiency-row {
+    grid-template-columns: minmax(78px, 1fr) 48px 62px;
+    gap: 6px;
+    padding: 8px 10px;
+  }
+
+  .ability-proficiency-row > strong,
+  .skill-row > strong {
+    font-size: 15px;
+  }
+
+  .skill-table-head,
   .skill-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(76px, 1fr) 48px 46px 46px;
+    gap: 6px;
+    min-height: 38px;
+    padding: 8px 10px;
+  }
+
+  .skill-table-head {
+    display: grid;
+    font-size: 11px;
+  }
+
+  .skill-row > span {
+    min-width: 0;
+  }
+
+  .skill-row > .el-checkbox {
+    justify-self: center;
   }
 
   .edit-drawer footer {
