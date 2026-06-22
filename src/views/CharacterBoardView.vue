@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
+import conditionConfig from '../config/Conditions.json'
 import acIcon from '../components/icons/AC.png'
 import hpIcon from '../components/icons/HP.png'
 import passivePerceptionIcon from '../components/icons/beidongchajue.png'
@@ -17,7 +18,12 @@ import attackBonusIcon from '../components/icons/gongjijiazhi.png'
 import strengthIcon from '../components/icons/liliang.png'
 import wisdomIcon from '../components/icons/ganzhi.png'
 
-type EditSection = 'profile' | 'core' | 'abilities' | 'proficiencies'
+type EditSection = 'profile' | 'core' | 'abilities' | 'resistances' | 'proficiencies'
+
+interface ConditionOption {
+  name: string
+  description: string
+}
 
 const {
   characters,
@@ -48,11 +54,23 @@ const hpTemporaryAmount = ref(0)
 const alignmentOptions = computed(() => characterCreationConfig.alignments.flat())
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const draftTotalLevel = computed(() => getClassTotalLevel(form.classes))
+const damageResistanceOptions = ['酸蚀', '火焰', '寒冷', '闪电', '雷鸣', '毒素', '黯蚀', '光耀', '心灵', '力场', '挥砍', '穿刺', '钝击']
+const conditionOptions = computed<ConditionOption[]>(() => [
+  {
+    name: '专注',
+    description: '正在维持一个需要专注的法术或效应。受到伤害、施放另一个专注法术、失能或死亡时，可能会失去专注。',
+  },
+  ...((conditionConfig as ConditionOption[]) ?? []),
+])
+const activeConditionNames = computed(() => new Set(selectedCharacter.value?.activeConditions ?? []))
+const activeConditions = computed(() => conditionOptions.value.filter((condition) => activeConditionNames.value.has(condition.name)))
+const availableConditions = computed(() => conditionOptions.value.filter((condition) => !activeConditionNames.value.has(condition.name)))
 const editSectionTitle = computed(() => {
   const titleMap: Record<EditSection, string> = {
     profile: '编辑基本信息',
     core: '编辑核心数据',
     abilities: '编辑属性 · 技能 · 豁免',
+    resistances: '编辑抗性与豁免',
     proficiencies: '编辑熟练项',
   }
 
@@ -189,6 +207,18 @@ const setDraftSkillProficiency = (skill: (typeof form.abilities)[number]['skills
 const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills'][number], checked: boolean) => {
   skill.expertise = checked || undefined
   if (checked) skill.proficient = true
+}
+
+const toggleCondition = (conditionName: string) => {
+  syncForm()
+  const activeConditions = new Set(form.activeConditions)
+  if (activeConditions.has(conditionName)) {
+    activeConditions.delete(conditionName)
+  } else {
+    activeConditions.add(conditionName)
+  }
+  form.activeConditions = Array.from(activeConditions)
+  saveForm()
 }
 </script>
 
@@ -406,6 +436,73 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
 
     </section>
 
+    <section class="panel resistance-panel">
+      <div class="section-title">
+        <h2>抗性与豁免</h2>
+        <button class="icon-button" type="button" aria-label="编辑抗性与豁免" @click="openEditSection('resistances')">✎</button>
+      </div>
+
+      <div class="resistance-board">
+        <div>
+          <h3>伤害抗性</h3>
+          <div v-if="selectedCharacter.damageResistances.length > 0" class="tag-list">
+            <span v-for="resistance in selectedCharacter.damageResistances" :key="resistance" class="rules-tag resistance-tag">
+              {{ resistance }}抗性
+            </span>
+          </div>
+          <p v-else class="empty-state-text">未记录伤害抗性</p>
+        </div>
+
+        <div>
+          <h3>特殊豁免（优势 / 抗性）</h3>
+          <p class="special-save-text">{{ selectedCharacter.specialSaves || '未填写' }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel condition-panel">
+      <div class="section-title">
+        <h2>状态</h2>
+      </div>
+
+      <div class="condition-board">
+        <div>
+          <h3>当前状态</h3>
+          <div v-if="activeConditions.length > 0" class="tag-list condition-tag-list">
+            <el-tooltip
+              v-for="condition in activeConditions"
+              :key="condition.name"
+              :content="condition.description"
+              placement="top"
+              effect="light"
+            >
+              <button class="rules-tag condition-tag active" type="button" :title="condition.description" @click="toggleCondition(condition.name)">
+                {{ condition.name }}
+              </button>
+            </el-tooltip>
+          </div>
+          <p v-else class="empty-state-text">暂无当前状态</p>
+        </div>
+
+        <div>
+          <h3>可记录状态</h3>
+          <div class="tag-list condition-tag-list">
+            <el-tooltip
+              v-for="condition in availableConditions"
+              :key="condition.name"
+              :content="condition.description"
+              placement="top"
+              effect="light"
+            >
+              <button class="rules-tag condition-tag" type="button" :title="condition.description" @click="toggleCondition(condition.name)">
+                {{ condition.name }}
+              </button>
+            </el-tooltip>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section class="panel proficiency-panel">
       <div class="section-title">
         <h2>熟练项</h2>
@@ -578,6 +675,24 @@ const setDraftSkillExpertise = (skill: (typeof form.abilities)[number]['skills']
                   </div>
                   <div v-else class="skill-compact-empty">暂无关联技能</div>
                 </article>
+              </div>
+              </template>
+
+              <template v-else-if="activeEditSection === 'resistances'">
+              <div class="resistance-edit-panel">
+                <section>
+                  <h3>伤害抗性</h3>
+                  <el-checkbox-group v-model="form.damageResistances" class="damage-resistance-editor">
+                    <el-checkbox v-for="resistance in damageResistanceOptions" :key="resistance" :value="resistance">
+                      {{ resistance }}抗性
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </section>
+
+                <label>
+                  特殊豁免（优势 / 抗性）
+                  <el-input v-model="form.specialSaves" type="textarea" :rows="5" placeholder="例如：对中毒豁免优势、对魅惑豁免优势" />
+                </label>
               </div>
               </template>
 

@@ -196,6 +196,9 @@ interface Character {
   abilities: Ability[]
   feats: CharacterTraitEntry[]
   features: CharacterTraitEntry[]
+  damageResistances: string[]
+  specialSaves: string
+  activeConditions: string[]
   spells: CharacterSpellEntry[]
   spellSlots: Record<string, SpellSlot>
   hitDice: CharacterHitDieResource[]
@@ -746,6 +749,9 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => {
     ],
     feats: [],
     features: [],
+    damageResistances: [],
+    specialSaves: '',
+    activeConditions: [],
     spells: [],
     spellSlots: createDefaultSpellSlots(),
     hitDice: normalizeHitDice([defaultClass], undefined),
@@ -818,6 +824,13 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
     level,
     feats: normalizeTraitEntries(character.feats),
     features: normalizeTraitEntries(character.features),
+    damageResistances: Array.isArray(character.damageResistances)
+      ? Array.from(new Set(character.damageResistances.map((entry) => entry.trim()).filter(Boolean)))
+      : [],
+    specialSaves: character.specialSaves?.trim() || '',
+    activeConditions: Array.isArray(character.activeConditions)
+      ? Array.from(new Set(character.activeConditions.map((entry) => entry.trim()).filter(Boolean)))
+      : [],
     spells: normalizeSpellEntries(character.spells),
     spellSlots: normalizeSpellSlots(character.spellSlots),
     hitDice: normalizeHitDice(classes, character.hitDice),
