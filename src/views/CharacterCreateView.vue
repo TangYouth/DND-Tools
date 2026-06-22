@@ -25,6 +25,7 @@ const {
   CUSTOM_OPTION,
   abilityDefinitions,
   characterCreationConfig,
+  speciesOptions,
   creationStep,
   creationDraft,
   abilityRolls,
@@ -221,7 +222,7 @@ onUnmounted(() => {
               <span class="field-label">种族<em>*</em></span>
               <el-select v-model="creationDraft.species" placeholder="选择种族">
                 <el-option label="自定义" :value="CUSTOM_OPTION" />
-                <el-option v-for="species in characterCreationConfig.species" :key="species" :label="species" :value="species">
+                <el-option v-for="species in speciesOptions" :key="species" :label="species" :value="species">
                   {{ species }}
                 </el-option>
               </el-select>

@@ -1,5 +1,6 @@
 import { computed, reactive, ref, watch } from 'vue'
 import characterCreationConfig from '../config/characterCreation.json'
+import speciesTraitsConfig from '../config/species.json'
 
 declare global {
   interface Window {
@@ -79,6 +80,11 @@ interface CharacterTraitEntry {
   title: string
   source: string
   prerequisites: string
+  description: string
+}
+
+interface SpeciesTraitConfigEntry {
+  name: string
   description: string
 }
 
@@ -393,6 +399,14 @@ const createTraitEntry = (title = '', source = '', description = '', prerequisit
   prerequisites,
   description,
 })
+
+const speciesTraits = speciesTraitsConfig as Record<string, SpeciesTraitConfigEntry[]>
+const speciesOptions = Object.keys(speciesTraits)
+
+const createSpeciesTraitEntries = (species: string): CharacterTraitEntry[] => {
+  const source = `${species}特质`
+  return (speciesTraits[species] ?? []).map((trait) => createTraitEntry(trait.name, source, trait.description))
+}
 
 const createSpellEntry = (
   name = '',
@@ -1551,6 +1565,7 @@ const finishCreation = () => {
     ...initialCoreStats,
     proficiency: currentProficiencyBonus.value,
     abilities: createAbilitiesFromDraft(),
+    features: createSpeciesTraitEntries(resolveCustomValue(creationDraft.species, creationDraft.customSpecies)),
     hitDice: normalizeHitDice(characterClasses, undefined),
     notes: '角色创建流程已记录基本信息，后续步骤可继续完善。',
   })
@@ -1565,6 +1580,7 @@ export const useCharacters = () => ({
   abilityDefinitions,
   skillDefinitions,
   characterCreationConfig,
+  speciesOptions,
   characters,
   selectedId,
   selectedCharacter,
