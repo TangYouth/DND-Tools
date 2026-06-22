@@ -303,7 +303,14 @@ const toggleCondition = (conditionName: string) => {
 
         <div class="story">
           <h4>背景故事</h4>
-          <p class="story-text" :title="selectedCharacter.story || '暂无背景故事。'">{{ selectedCharacter.story || '暂无背景故事。' }}</p>
+          <el-tooltip
+            :content="selectedCharacter.story || '暂无背景故事。'"
+            placement="top-start"
+            effect="light"
+            popper-class="dnd-tooltip dnd-tooltip-rich"
+          >
+            <p class="story-text">{{ selectedCharacter.story || '暂无背景故事。' }}</p>
+          </el-tooltip>
         </div>
 
       </article>
@@ -315,23 +322,37 @@ const toggleCondition = (conditionName: string) => {
         </div>
 
         <div class="metric-grid">
-          <button
-            v-for="metric in metricCards"
-            :key="metric.label"
-            class="metric-card"
-            :class="[metric.tone, { interactive: metric.label === 'HP' }]"
-            type="button"
-            :title="metric.label === 'HP' ? '点击快速调整 HP' : undefined"
-            @click="metric.label === 'HP' && toggleHpQuickEdit()"
-          >
-            <span class="metric-label">
-              <img v-if="getMetricIcon(metric.label)" :src="getMetricIcon(metric.label)" alt="" />
-              {{ metric.label }}
-            </span>
-            <strong>{{ metric.value }}</strong>
-            <small v-if="metric.label === 'HP'" class="metric-action-hint"></small>
-            <i v-if="metric.label === 'HP'" :style="{ width: `${hpPercent}%` }"></i>
-          </button>
+          <template v-for="metric in metricCards" :key="metric.label">
+            <el-tooltip
+              v-if="metric.label === 'HP'"
+              content="点击快速调整当前生命值、恢复和临时生命值。"
+              placement="top"
+              effect="light"
+              popper-class="dnd-tooltip"
+            >
+              <button class="metric-card interactive" :class="metric.tone" type="button" @click="toggleHpQuickEdit">
+                <span class="metric-label">
+                  <img v-if="getMetricIcon(metric.label)" :src="getMetricIcon(metric.label)" alt="" />
+                  {{ metric.label }}
+                </span>
+                <strong>{{ metric.value }}</strong>
+                <small class="metric-action-hint"></small>
+                <i :style="{ width: `${hpPercent}%` }"></i>
+              </button>
+            </el-tooltip>
+            <button
+              v-else
+              class="metric-card"
+              :class="metric.tone"
+              type="button"
+            >
+              <span class="metric-label">
+                <img v-if="getMetricIcon(metric.label)" :src="getMetricIcon(metric.label)" alt="" />
+                {{ metric.label }}
+              </span>
+              <strong>{{ metric.value }}</strong>
+            </button>
+          </template>
         </div>
         <p class="metric-panel-hint">可以点击 HP 快速调整当前生命值、恢复和临时生命值。</p>
 
@@ -475,8 +496,9 @@ const toggleCondition = (conditionName: string) => {
               :content="condition.description"
               placement="top"
               effect="light"
+              popper-class="dnd-tooltip dnd-tooltip-rich"
             >
-              <button class="rules-tag condition-tag active" type="button" :title="condition.description" @click="toggleCondition(condition.name)">
+              <button class="rules-tag condition-tag active" type="button" @click="toggleCondition(condition.name)">
                 {{ condition.name }}
               </button>
             </el-tooltip>
@@ -493,8 +515,9 @@ const toggleCondition = (conditionName: string) => {
               :content="condition.description"
               placement="top"
               effect="light"
+              popper-class="dnd-tooltip dnd-tooltip-rich"
             >
-              <button class="rules-tag condition-tag" type="button" :title="condition.description" @click="toggleCondition(condition.name)">
+              <button class="rules-tag condition-tag" type="button" @click="toggleCondition(condition.name)">
                 {{ condition.name }}
               </button>
             </el-tooltip>

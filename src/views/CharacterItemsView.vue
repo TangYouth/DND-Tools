@@ -32,6 +32,8 @@ const attunedItems = computed(() => selectedCharacter.value?.inventoryItems.filt
 const equipmentItems = computed(() => selectedCharacter.value?.inventoryItems.filter((item) => item.location === 'equipment') ?? [])
 const backpackItems = computed(() => selectedCharacter.value?.inventoryItems.filter((item) => item.location === 'backpack') ?? [])
 const itemDialogTitle = computed(() => `${itemDraft.id ? '编辑' : '添加'}物品`)
+const getItemDescription = (description: string) => description || '暂无描述。'
+const hasItemDescription = (description: string) => Boolean(description.trim())
 
 const deleteCurrentCharacter = () => {
   if (!selectedCharacter.value) return
@@ -239,7 +241,15 @@ const canAttune = (itemId: string) => {
               </div>
             </div>
             <strong>{{ item.value }} GP <small>x {{ item.quantity }}</small></strong>
-            <p>{{ item.description || '暂无描述。' }}</p>
+            <el-tooltip
+              :content="getItemDescription(item.description)"
+              :disabled="!hasItemDescription(item.description)"
+              placement="top-start"
+              effect="light"
+              popper-class="dnd-tooltip dnd-tooltip-rich"
+            >
+              <p>{{ getItemDescription(item.description) }}</p>
+            </el-tooltip>
           </div>
           <footer>
             <span>{{ item.requiresAttunement ? '需要同调' : '无需同调' }}</span>
@@ -277,7 +287,15 @@ const canAttune = (itemId: string) => {
               </div>
             </div>
             <strong>{{ item.value }} GP <small>x {{ item.quantity }}</small></strong>
-            <p>{{ item.description || '暂无描述。' }}</p>
+            <el-tooltip
+              :content="getItemDescription(item.description)"
+              :disabled="!hasItemDescription(item.description)"
+              placement="top-start"
+              effect="light"
+              popper-class="dnd-tooltip dnd-tooltip-rich"
+            >
+              <p>{{ getItemDescription(item.description) }}</p>
+            </el-tooltip>
           </div>
           <footer>
             <span>{{ item.requiresAttunement ? '需要同调' : '无需同调' }}</span>

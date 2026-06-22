@@ -281,7 +281,9 @@ const removeResource = (resourceId: string) => {
 
       <div class="resource-section-heading">
         <h3>职业资源</h3>
-        <span title="生命骰最大值随对应职业等级变化，当前值可在休息后恢复。"></span>
+        <el-tooltip content="生命骰最大值随对应职业等级变化，当前值可在休息后恢复。" placement="top" effect="light" popper-class="dnd-tooltip">
+          <span></span>
+        </el-tooltip>
       </div>
 
       <div v-if="selectedCharacter.hitDice.length > 0" class="hit-dice-list">

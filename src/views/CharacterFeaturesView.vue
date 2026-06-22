@@ -57,6 +57,8 @@ const featOptions = computed<FeatOption[]>(() => {
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const traitDialogTitle = computed(() => `${editingTraitId.value ? '编辑' : '添加'}${activeKind.value === 'feats' ? '专长' : '特性'}`)
 const isFeatConfigMode = computed(() => activeKind.value === 'feats' && !traitDraft.useCustom)
+const getTraitDescription = (description: string) => description || '暂无描述。'
+const hasTraitDescription = (description: string) => Boolean(description.trim())
 
 const findMatchingFeatOption = (trait: { title: string; source: string; prerequisites?: string; description: string }) => {
   return featOptions.value.find(
@@ -221,7 +223,15 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
           </div>
           <p class="trait-source">来源：{{ trait.source }}</p>
           <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
-          <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
+          <el-tooltip
+            :content="getTraitDescription(trait.description)"
+            :disabled="!hasTraitDescription(trait.description)"
+            placement="top-start"
+            effect="light"
+            popper-class="dnd-tooltip dnd-tooltip-rich"
+          >
+            <p class="trait-description">{{ getTraitDescription(trait.description) }}</p>
+          </el-tooltip>
         </article>
       </div>
       <div v-else class="trait-empty">暂无专长，点击右上角添加。</div>
@@ -244,7 +254,15 @@ const handleCustomModeChange = (useCustom: string | number | boolean) => {
           </div>
           <p class="trait-source">来源：{{ trait.source }}</p>
           <p v-if="trait.prerequisites" class="trait-source">先决条件：{{ trait.prerequisites }}</p>
-          <p class="trait-description">{{ trait.description || '暂无描述。' }}</p>
+          <el-tooltip
+            :content="getTraitDescription(trait.description)"
+            :disabled="!hasTraitDescription(trait.description)"
+            placement="top-start"
+            effect="light"
+            popper-class="dnd-tooltip dnd-tooltip-rich"
+          >
+            <p class="trait-description">{{ getTraitDescription(trait.description) }}</p>
+          </el-tooltip>
         </article>
       </div>
       <div v-else class="trait-empty">暂无特性，点击右上角添加。</div>

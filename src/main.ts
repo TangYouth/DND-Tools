@@ -8,10 +8,11 @@ import 'element-plus/theme-chalk/el-popper.css'
 import 'element-plus/theme-chalk/el-scrollbar.css'
 import 'element-plus/theme-chalk/el-select.css'
 import 'element-plus/theme-chalk/el-tag.css'
+import 'element-plus/theme-chalk/el-tooltip.css'
 import './assets/main.css'
 
 import { createApp } from 'vue'
-import { ElCheckbox, ElInput, ElInputNumber, ElOption, ElSelect } from 'element-plus'
+import { ElCheckbox, ElInput, ElInputNumber, ElOption, ElSelect, ElTooltip } from 'element-plus'
 import App from './App.vue'
 import router from './router'
 
@@ -21,5 +22,6 @@ createApp(App)
   .use(ElInputNumber)
   .use(ElOption)
   .use(ElSelect)
+  .use(ElTooltip)
   .use(router)
   .mount('#app')

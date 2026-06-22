@@ -106,7 +106,9 @@ const handleTouchEnd = (event: TouchEvent) => {
           骰子工具
         </button>
         <button type="button" @click="importCharactersFromFile">导入角色</button>
-        <button type="button" :title="storageLocationLabel" @click="chooseStorageFile">存储路径</button>
+        <el-tooltip :content="storageLocationLabel" placement="top" effect="light" popper-class="dnd-tooltip">
+          <button type="button" @click="chooseStorageFile">存储路径</button>
+        </el-tooltip>
         <input ref="importInput" class="visually-hidden-input" type="file" accept="application/json,.json" @change="importJson" />
         <small>{{ storageStatus }}</small>
       </div>

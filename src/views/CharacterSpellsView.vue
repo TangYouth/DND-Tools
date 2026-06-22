@@ -441,23 +441,33 @@ const adjustSlot = (level: number, delta: number) => {
           <dl class="spell-meta-grid">
             <div>
               <dt>施法时间</dt>
-              <dd :title="spell.castingTime">{{ spell.castingTime }}</dd>
+              <el-tooltip :content="spell.castingTime" placement="top" effect="light" popper-class="dnd-tooltip">
+                <dd>{{ spell.castingTime }}</dd>
+              </el-tooltip>
             </div>
             <div>
               <dt>施法距离</dt>
-              <dd :title="spell.range">{{ spell.range }}</dd>
+              <el-tooltip :content="spell.range" placement="top" effect="light" popper-class="dnd-tooltip">
+                <dd>{{ spell.range }}</dd>
+              </el-tooltip>
             </div>
             <div>
               <dt>法术成分</dt>
-              <dd :title="spell.components">{{ spell.components }}</dd>
+              <el-tooltip :content="spell.components" placement="top" effect="light" popper-class="dnd-tooltip">
+                <dd>{{ spell.components }}</dd>
+              </el-tooltip>
             </div>
             <div>
               <dt>持续时间</dt>
-              <dd :title="spell.duration">{{ spell.duration }}</dd>
+              <el-tooltip :content="spell.duration" placement="top" effect="light" popper-class="dnd-tooltip">
+                <dd>{{ spell.duration }}</dd>
+              </el-tooltip>
             </div>
           </dl>
 
-          <p class="spell-description" :title="spell.description || '暂无描述。'">{{ spell.description || '暂无描述。' }}</p>
+          <el-tooltip :content="spell.description || '暂无描述。'" placement="top-start" effect="light" popper-class="dnd-tooltip dnd-tooltip-rich">
+            <p class="spell-description">{{ spell.description || '暂无描述。' }}</p>
+          </el-tooltip>
           <button v-if="spell.level > 0" class="plain-button spell-prepared-action" type="button" @click="togglePrepared(spell.id)">
             {{ getPreparedLabel(spell.prepared) }}
           </button>
