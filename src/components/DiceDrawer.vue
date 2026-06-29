@@ -12,6 +12,7 @@ type DiceRollResult = {
 }
 
 const DICE_HISTORY_KEY = 'dnd-tools.dice-history.v1'
+const DICE_HISTORY_LIMIT = 50
 const diceCountOptions = [1, 2, 3, 4, 5, 8]
 const diceSideOptions = [4, 6, 8, 10, 12, 20]
 
@@ -73,7 +74,7 @@ const getRandomRolls = () => {
 }
 
 const saveDiceHistory = () => {
-  localStorage.setItem(DICE_HISTORY_KEY, JSON.stringify(diceHistory.value.slice(0, 20)))
+  localStorage.setItem(DICE_HISTORY_KEY, JSON.stringify(diceHistory.value.slice(0, DICE_HISTORY_LIMIT)))
 }
 
 const loadDiceHistory = () => {
@@ -92,7 +93,7 @@ const loadDiceHistory = () => {
             typeof roll.createdAt === 'string'
           )
         })
-        .slice(0, 20)
+        .slice(0, DICE_HISTORY_LIMIT)
       latestRoll.value = diceHistory.value[0] ?? null
     }
   } catch {
@@ -172,7 +173,7 @@ const rollDice = () => {
     }
 
     latestRoll.value = rollResult
-    diceHistory.value = [rollResult, ...diceHistory.value].slice(0, 20)
+    diceHistory.value = [rollResult, ...diceHistory.value].slice(0, DICE_HISTORY_LIMIT)
     saveDiceHistory()
     dicePreview.value = []
     isRollingDice.value = false
@@ -180,7 +181,7 @@ const rollDice = () => {
 }
 
 const handleAppKeydown = (event: KeyboardEvent) => {
-  if (event.ctrlKey && event.key.toLowerCase() === 'r') {
+  if (event.ctrlKey && event.key.toLowerCase() === 'e') {
     event.preventDefault()
     isDicePanelOpen.value = !isDicePanelOpen.value
   }
@@ -215,7 +216,7 @@ defineExpose({
         <header class="dice-drawer-header">
           <div>
             <h2 id="dice-drawer-title">投掷骰子</h2>
-            <small>Ctrl + R 唤出 / Esc 关闭</small>
+            <small>Ctrl + E 唤出 / Esc 关闭</small>
           </div>
           <div class="dice-drawer-header-actions">
             <button class="plain-button" type="button" @click="isDiceHistoryOpen = !isDiceHistoryOpen">

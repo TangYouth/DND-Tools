@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { RouterView, useRouter } from 'vue-router'
+import ComplexDiceDrawer from './components/ComplexDiceDrawer.vue'
 import DiceDrawer from './components/DiceDrawer.vue'
 import { useCharacters } from './composables/useCharacters'
 
@@ -20,6 +21,7 @@ const {
 } = useCharacters()
 
 const diceDrawer = ref<InstanceType<typeof DiceDrawer> | null>(null)
+const complexDiceDrawer = ref<InstanceType<typeof ComplexDiceDrawer> | null>(null)
 const isMobileSidebarOpen = ref(false)
 const touchStartX = ref(0)
 const touchStartY = ref(0)
@@ -39,6 +41,11 @@ const createCharacter = () => {
 const openDicePanel = () => {
   isMobileSidebarOpen.value = false
   diceDrawer.value?.open()
+}
+
+const openComplexDicePanel = () => {
+  isMobileSidebarOpen.value = false
+  complexDiceDrawer.value?.open()
 }
 
 const openMobileSidebar = () => {
@@ -69,14 +76,16 @@ const handleTouchEnd = (event: TouchEvent) => {
 </script>
 
 <template>
-  <div class="app-shell" :class="{ 'sidebar-open': isMobileSidebarOpen }" @touchstart.passive="handleTouchStart" @touchend.passive="handleTouchEnd">
+  <div class="app-shell" :class="{ 'sidebar-open': isMobileSidebarOpen }" @touchstart.passive="handleTouchStart"
+    @touchend.passive="handleTouchEnd">
     <button class="mobile-menu-button" type="button" aria-label="打开角色侧栏" @click="openMobileSidebar">
       <span></span>
       <span></span>
       <span></span>
     </button>
 
-    <button v-if="isMobileSidebarOpen" class="mobile-sidebar-scrim" type="button" aria-label="关闭角色侧栏" @click="closeMobileSidebar"></button>
+    <button v-if="isMobileSidebarOpen" class="mobile-sidebar-scrim" type="button" aria-label="关闭角色侧栏"
+      @click="closeMobileSidebar"></button>
 
     <aside class="sidebar">
       <div class="brand-mark">
@@ -102,14 +111,18 @@ const handleTouchEnd = (event: TouchEvent) => {
       </div>
 
       <div class="sidebar-footer">
+        <button type="button" @click="openComplexDicePanel">
+          复杂骰子组
+        </button>
         <button type="button" @click="openDicePanel">
-          骰子工具
+          简易骰子组
         </button>
         <button type="button" @click="importCharactersFromFile">导入角色</button>
         <el-tooltip :content="storageLocationLabel" placement="top" effect="light" popper-class="dnd-tooltip">
           <button type="button" @click="chooseStorageFile">存储路径</button>
         </el-tooltip>
-        <input ref="importInput" class="visually-hidden-input" type="file" accept="application/json,.json" @change="importJson" />
+        <input ref="importInput" class="visually-hidden-input" type="file" accept="application/json,.json"
+          @change="importJson" />
         <small>{{ storageStatus }}</small>
       </div>
     </aside>
@@ -119,5 +132,6 @@ const handleTouchEnd = (event: TouchEvent) => {
     </main>
 
     <DiceDrawer ref="diceDrawer" />
+    <ComplexDiceDrawer ref="complexDiceDrawer" />
   </div>
 </template>

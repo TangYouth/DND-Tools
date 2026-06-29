@@ -620,6 +620,231 @@ button {
   color: var(--muted);
 }
 
+.complex-dice-drawer {
+  width: min(920px, calc(100vw - 28px));
+}
+
+.complex-editor-section {
+  gap: 14px;
+}
+
+.complex-editor-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) 120px;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.complex-expression-input {
+  min-width: 0;
+  height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  background: rgba(255, 255, 255, 0.72);
+  font-size: 20px;
+  outline: none;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.complex-expression-input:focus {
+  border-color: rgba(47, 99, 238, 0.62);
+  box-shadow: 0 0 0 3px rgba(47, 99, 238, 0.16);
+}
+
+.complex-editor-grid .primary-button,
+.complex-editor-grid .plain-button {
+  height: 52px;
+  min-height: 52px;
+  padding-top: 0;
+  padding-bottom: 0;
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.complex-format-tip {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.complex-format-tip.error {
+  color: var(--danger);
+}
+
+.complex-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.complex-section-header small {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.complex-groups-table {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.4);
+}
+
+.complex-table-head,
+.complex-table-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) 92px 134px;
+  align-items: center;
+  gap: 12px;
+  min-height: 56px;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(216, 201, 181, 0.78);
+}
+
+.complex-table-head {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.complex-table-row {
+  position: relative;
+  color: #30271f;
+  font-size: 16px;
+}
+
+.complex-table-row:last-child {
+  border-bottom: 0;
+}
+
+.complex-table-row strong {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.complex-table-row span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.complex-table-row > div {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  justify-content: center;
+}
+
+.complex-table-row .icon-button {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+}
+
+.complex-empty-state {
+  display: grid;
+  min-height: 112px;
+  place-items: center;
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.34);
+  font-weight: 700;
+}
+
+.complex-result-panel {
+  display: grid;
+  grid-template-columns: minmax(130px, 0.9fr) minmax(260px, 1.55fr) minmax(130px, 0.9fr);
+  overflow: hidden;
+  min-height: 152px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.complex-result-panel > div {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  gap: 12px;
+  min-width: 0;
+  padding: 18px 14px;
+  border-right: 1px solid rgba(216, 201, 181, 0.82);
+}
+
+.complex-result-panel > div:last-child {
+  border-right: 0;
+}
+
+.complex-result-panel span {
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.complex-result-panel strong {
+  color: #172033;
+  font-size: 56px;
+  line-height: 1;
+}
+
+.complex-result-panel > div:first-child strong {
+  color: #2f63ee;
+}
+
+.complex-roll-groups {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 14px 20px;
+}
+
+.complex-roll-groups section {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  min-width: 80px;
+}
+
+.complex-roll-groups b {
+  color: #40362d;
+  font-size: 16px;
+}
+
+.dice-roll-pills i {
+  display: grid;
+  min-width: 34px;
+  min-height: 34px;
+  place-items: center;
+  border: 1px solid rgba(47, 99, 238, 0.22);
+  border-radius: 999px;
+  color: #1f54d8;
+  background: rgba(47, 99, 238, 0.08);
+  font-size: 16px;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.complex-result-panel.rolling strong,
+.complex-result-panel.rolling .dice-roll-pills i {
+  animation: dice-roll-tick 90ms ease-in-out infinite alternate;
+}
+
+.complex-history-panel {
+  margin-top: -12px;
+}
+
 .dice-drawer-footer {
   display: grid;
   grid-template-columns: minmax(200px, 1fr) minmax(150px, 0.6fr);
@@ -4951,6 +5176,111 @@ textarea {
   .dice-drawer-footer button {
     min-height: 48px;
     font-size: 16px;
+  }
+
+  .complex-dice-drawer {
+    width: 100vw;
+  }
+
+  .complex-editor-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .complex-expression-input {
+    height: 46px;
+    font-size: 17px;
+  }
+
+  .complex-editor-grid .primary-button,
+  .complex-editor-grid .plain-button {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
+  .complex-groups-table {
+    display: grid;
+    gap: 10px;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+  }
+
+  .complex-table-head {
+    display: none;
+  }
+
+  .complex-table-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 10px;
+    min-height: 0;
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.42);
+  }
+
+  .complex-table-row strong {
+    display: block;
+    max-width: 100%;
+    padding-left: 0;
+    font-size: 18px;
+  }
+
+  .complex-table-row span {
+    display: block;
+    justify-self: end;
+    color: var(--muted);
+    font-size: 15px;
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .complex-table-row > div {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-start;
+    gap: 10px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(216, 201, 181, 0.56);
+  }
+
+  .complex-table-row .icon-button {
+    width: 42px;
+    height: 38px;
+  }
+
+  .complex-result-panel {
+    grid-template-columns: 0.8fr minmax(0, 1.2fr) 0.8fr;
+    min-height: 112px;
+  }
+
+  .complex-result-panel > div {
+    gap: 8px;
+    padding: 12px 8px;
+  }
+
+  .complex-result-panel span {
+    font-size: 12px;
+    text-align: center;
+  }
+
+  .complex-result-panel strong {
+    font-size: 34px;
+  }
+
+  .complex-roll-groups {
+    gap: 8px;
+  }
+
+  .complex-roll-groups b {
+    font-size: 12px;
+  }
+
+  .dice-roll-pills i {
+    min-width: 28px;
+    min-height: 28px;
+    font-size: 13px;
   }
 
   .card-edit-actions {
