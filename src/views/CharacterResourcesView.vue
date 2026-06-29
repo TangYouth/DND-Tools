@@ -186,6 +186,14 @@ const adjustCustomResource = (resourceId: string, delta: number) => {
   saveForm()
 }
 
+const updateCustomResourceCurrent = (resourceId: string, value: string | number) => {
+  syncForm()
+  const resource = form.resources.find((item) => item.id === resourceId)
+  if (!resource) return
+  resource.current = Math.min(resource.max, Math.max(0, Number(value) || 0))
+  saveForm()
+}
+
 const openResourceDialog = (resourceId = '') => {
   syncForm()
   editingResourceId.value = resourceId
@@ -330,7 +338,15 @@ const removeResource = (resourceId: string) => {
           <strong>{{ resource.current }} / {{ resource.max }}</strong>
           <div class="resource-stepper">
             <button type="button" @click="adjustCustomResource(resource.id, -1)">−</button>
-            <b>{{ resource.current }}</b>
+            <input
+              :value="resource.current"
+              type="number"
+              min="0"
+              :max="resource.max"
+              aria-label="当前资源数量"
+              @change="updateCustomResourceCurrent(resource.id, ($event.target as HTMLInputElement).value)"
+              @blur="updateCustomResourceCurrent(resource.id, ($event.target as HTMLInputElement).value)"
+            />
             <button type="button" @click="adjustCustomResource(resource.id, 1)">＋</button>
           </div>
         </article>
