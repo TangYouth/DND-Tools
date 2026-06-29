@@ -1743,6 +1743,7 @@ h1 {
 .spell-list-panel {
   display: grid;
   gap: 18px;
+  min-width: 0;
   margin-bottom: 18px;
   padding: 26px;
   border: 1px solid var(--line);
@@ -1759,6 +1760,12 @@ h1 {
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  min-width: 0;
+}
+
+.spell-slot-panel > header > div:first-child,
+.spell-list-panel > header > h2 {
+  min-width: 0;
 }
 
 .spell-slot-panel h2,
@@ -1785,6 +1792,7 @@ h1 {
   align-items: center;
   gap: 10px;
   justify-content: flex-end;
+  min-width: 0;
 }
 
 .spell-panel-actions > button {
@@ -1820,8 +1828,9 @@ h1 {
 }
 
 .spell-slot-grid {
-  display: grid;
-  grid-template-columns: repeat(9, minmax(110px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 12px;
 }
 
@@ -1829,6 +1838,8 @@ h1 {
   display: grid;
   gap: 10px;
   justify-items: center;
+  width: clamp(148px, 38vw, 184px);
+  height: 132px;
   min-height: 112px;
   padding: 12px;
   border: 1px solid var(--line);
@@ -1919,8 +1930,9 @@ h1 {
 }
 
 .spell-compact-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 10px;
 }
 
@@ -1929,6 +1941,7 @@ h1 {
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
+  width: clamp(250px, 31vw, 360px);
   min-height: 58px;
   padding: 10px 12px;
   border: 1px solid var(--line);
@@ -2280,14 +2293,14 @@ h1 {
 }
 
 .custom-resource-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(220px, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
   gap: 18px;
 }
 
 .custom-resource-card,
 .add-resource-card {
-  min-height: 210px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.42);
@@ -2300,7 +2313,8 @@ h1 {
   gap: 12px;
   align-content: start;
   justify-items: center;
-  min-height: 0;
+  width: clamp(220px, 28vw, 280px);
+  height: 280px;
   padding: 54px 22px 22px;
   text-align: center;
 }
@@ -4661,11 +4675,8 @@ textarea {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 
-  .spell-slot-grid,
   .spell-card-grid,
-  .spell-compact-grid,
-  .item-card-grid,
-  .custom-resource-grid {
+  .item-card-grid {
     grid-template-columns: repeat(2, minmax(220px, 1fr));
   }
 }
@@ -4818,15 +4829,11 @@ textarea {
   .proficiency-rule-grid,
   .skill-group-grid,
   .trait-grid,
-  .spell-slot-grid,
   .spell-card-grid,
-  .spell-compact-grid,
-  .custom-resource-grid,
   .item-card-grid,
   .creature-workspace,
   .creature-detail-card > header,
   .creature-ability-grid,
-  .hit-die-card,
   .gold-editor-card,
   .attunement-status-card,
   .resource-dialog-grid,
@@ -4870,6 +4877,30 @@ textarea {
 
   .preview-card {
     display: none;
+  }
+
+  .hit-die-card {
+    grid-template-columns: 72px minmax(138px, 1fr) minmax(156px, 220px) auto;
+    gap: 14px;
+    padding: 18px;
+  }
+
+  .hit-die-icon {
+    width: 66px;
+    height: 66px;
+  }
+
+  .hit-die-icon img {
+    width: 46px;
+    height: 46px;
+  }
+
+  .hit-die-card h3 {
+    font-size: 22px;
+  }
+
+  .hit-die-card p {
+    font-size: 15px;
   }
 
   .roll-pool {

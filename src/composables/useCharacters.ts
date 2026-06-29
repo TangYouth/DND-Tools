@@ -609,13 +609,15 @@ const normalizeCreatures = (entries: CharacterCreatureEntry[] | undefined) => {
 }
 
 const createDefaultSpellSlots = (): Record<string, SpellSlot> => {
-  return Array.from({ length: 9 }, (_, index) => String(index + 1)).reduce(
+  const slots = Array.from({ length: 9 }, (_, index) => String(index + 1)).reduce(
     (slots, level) => {
       slots[level] = { current: 0, max: 0 }
       return slots
     },
     {} as Record<string, SpellSlot>,
   )
+  slots.pact = { current: 0, max: 0 }
+  return slots
 }
 
 const normalizeSpellEntries = (entries: CharacterSpellEntry[] | undefined) => {

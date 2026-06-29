@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { RouterLink } from 'vue-router'
 import { useCharacters } from '../composables/useCharacters'
 import spellConfig from '../config/spellConfig.json'
 
 const spellLevels = Array.from({ length: 10 }, (_, level) => level)
 const spellSlotLevels = Array.from({ length: 9 }, (_, index) => index + 1)
+const pactMagicSlotKey = 'pact'
+const spellViewModeStorageKey = 'dnd-tools:character-spells:view-mode'
+const spellLevelStorageKey = 'dnd-tools:character-spells:active-level'
 const spellSchools = ['防护学派', '咒法学派', '预言学派', '惑控学派', '塑能学派', '幻术学派', '死灵学派', '变化学派', '其他']
 interface SpellConfigEntry {
   name: string
@@ -40,8 +43,14 @@ const {
   createSpellEntry,
 } = useCharacters()
 
-const activeSpellLevel = ref(-1)
-const isCompactSpellView = ref(false)
+const readStoredSpellLevel = () => {
+  if (typeof window === 'undefined') return -1
+  const storedLevel = Number(window.localStorage.getItem(spellLevelStorageKey))
+  return Number.isInteger(storedLevel) && storedLevel >= -2 && storedLevel <= 9 ? storedLevel : -1
+}
+
+const activeSpellLevel = ref(readStoredSpellLevel())
+const isCompactSpellView = ref(typeof window !== 'undefined' && window.localStorage.getItem(spellViewModeStorageKey) === 'compact')
 const editingSpellId = ref('')
 const isSpellDialogOpen = ref(false)
 const isSlotEditorOpen = ref(false)
@@ -94,6 +103,10 @@ const displaySlotLevels = computed(() => {
     return (slot?.max ?? 0) > 0 || selectedCharacter.value?.spells.some((spell) => spell.level === level)
   })
 })
+const shouldDisplayPactMagicSlot = computed(() => {
+  const slot = selectedCharacter.value?.spellSlots[pactMagicSlotKey]
+  return (slot?.max ?? 0) > 0
+})
 const filteredSpells = computed(() => {
   if (!selectedCharacter.value) return []
   if (activeSpellLevel.value === -1) return selectedCharacter.value.spells
@@ -116,8 +129,18 @@ const ensureSpellSlot = (level: number) => {
   return slot
 }
 
+const ensurePactMagicSlot = () => {
+  const slot = form.spellSlots[pactMagicSlotKey] ?? { current: 0, max: 0 }
+  form.spellSlots[pactMagicSlotKey] = slot
+  return slot
+}
+
 const getSelectedSpellSlot = (level: number) => {
   return selectedCharacter.value?.spellSlots[String(level)] ?? { current: 0, max: 0 }
+}
+
+const getSelectedPactMagicSlot = () => {
+  return selectedCharacter.value?.spellSlots[pactMagicSlotKey] ?? { current: 0, max: 0 }
 }
 
 const deleteCurrentCharacter = () => {
@@ -296,6 +319,9 @@ const saveSlots = () => {
     slot.max = Math.max(0, Number(slot.max) || 0)
     slot.current = Math.min(slot.max, Math.max(0, Number(slot.current) || 0))
   })
+  const pactSlot = ensurePactMagicSlot()
+  pactSlot.max = Math.max(0, Number(pactSlot.max) || 0)
+  pactSlot.current = Math.min(pactSlot.max, Math.max(0, Number(pactSlot.current) || 0))
   saveForm()
   isSlotEditorOpen.value = false
 }
@@ -306,6 +332,8 @@ const restoreAllSlots = () => {
     const slot = ensureSpellSlot(level)
     slot.current = slot.max
   })
+  const pactSlot = ensurePactMagicSlot()
+  pactSlot.current = pactSlot.max
   saveForm()
 }
 
@@ -315,6 +343,23 @@ const adjustSlot = (level: number, delta: number) => {
   slot.current = Math.min(slot.max, Math.max(0, slot.current + delta))
   saveForm()
 }
+
+const adjustPactMagicSlot = (delta: number) => {
+  syncForm()
+  const slot = ensurePactMagicSlot()
+  slot.current = Math.min(slot.max, Math.max(0, slot.current + delta))
+  saveForm()
+}
+
+watch(isCompactSpellView, (isCompact) => {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(spellViewModeStorageKey, isCompact ? 'compact' : 'normal')
+})
+
+watch(activeSpellLevel, (level) => {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(spellLevelStorageKey, String(level))
+})
 </script>
 
 <template>
@@ -375,8 +420,17 @@ const adjustSlot = (level: number, delta: number) => {
             <button type="button" @click="adjustSlot(level, 1)">＋</button>
           </div>
         </article>
+        <article v-if="shouldDisplayPactMagicSlot" class="spell-slot-card">
+          <strong>魔契师</strong>
+          <span>{{ getSelectedPactMagicSlot().current }} / {{ getSelectedPactMagicSlot().max }}</span>
+          <div>
+            <button type="button" @click="adjustPactMagicSlot(-1)">−</button>
+            <b>{{ getSelectedPactMagicSlot().current }}</b>
+            <button type="button" @click="adjustPactMagicSlot(1)">＋</button>
+          </div>
+        </article>
       </div>
-      <div v-else class="trait-empty">尚未设置法术位。点击“编辑法术位”配置 1-9 环法术位。</div>
+      <div v-else class="trait-empty">尚未设置法术位。点击“编辑法术位”配置 1-9 环或魔契师法术位。</div>
     </section>
 
     <section class="spell-list-panel">
@@ -492,6 +546,10 @@ const adjustSlot = (level: number, delta: number) => {
               <label v-for="level in spellSlotLevels" :key="level">
                 {{ level }}环最大法术位
                 <el-input-number v-model="ensureSpellSlot(level).max" :min="0" controls-position="right" />
+              </label>
+              <label>
+                魔契师最大法术位
+                <el-input-number v-model="ensurePactMagicSlot().max" :min="0" controls-position="right" />
               </label>
             </div>
           </div>
