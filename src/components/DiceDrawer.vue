@@ -211,11 +211,11 @@ defineExpose({
 <template>
   <Teleport to="body">
     <div v-if="isDicePanelOpen" class="dice-drawer-layer">
-      <button class="dice-drawer-scrim" type="button" aria-label="关闭骰子面板" @click="closeDicePanel"></button>
+      <button class="dice-drawer-scrim" type="button" aria-label="关闭简易骰子工具" @click="closeDicePanel"></button>
       <aside class="dice-drawer" aria-labelledby="dice-drawer-title">
         <header class="dice-drawer-header">
           <div>
-            <h2 id="dice-drawer-title">投掷骰子</h2>
+            <h2 id="dice-drawer-title">简易骰子工具</h2>
             <small>Ctrl + E 唤出 / Esc 关闭</small>
           </div>
           <div class="dice-drawer-header-actions">
@@ -224,7 +224,7 @@ defineExpose({
               <span class="dice-history-label-full">历史记录</span>
               <span class="dice-history-label-short">历史</span>
             </button>
-            <button class="icon-button" type="button" aria-label="关闭骰子面板" @click="closeDicePanel">×</button>
+            <button class="icon-button" type="button" aria-label="关闭简易骰子工具" @click="closeDicePanel">×</button>
           </div>
         </header>
 

@@ -365,16 +365,16 @@ defineExpose({
 <template>
   <Teleport to="body">
     <div v-if="isOpen" class="dice-drawer-layer">
-      <button class="dice-drawer-scrim" type="button" aria-label="关闭复杂骰子组" @click="close"></button>
+      <button class="dice-drawer-scrim" type="button" aria-label="关闭复杂骰子工具" @click="close"></button>
       <aside class="dice-drawer complex-dice-drawer" aria-labelledby="complex-dice-title">
         <header class="dice-drawer-header">
           <div>
-            <h2 id="complex-dice-title">复杂骰子组</h2>
+            <h2 id="complex-dice-title">复杂骰子工具</h2>
             <small>Ctrl + R 唤出 / Esc 关闭</small>
           </div>
           <div class="dice-drawer-header-actions">
             <button class="plain-button" type="button" @click="isHistoryOpen = !isHistoryOpen">↺ 历史记录</button>
-            <button class="icon-button" type="button" aria-label="关闭复杂骰子组" @click="close">×</button>
+            <button class="icon-button" type="button" aria-label="关闭复杂骰子工具" @click="close">×</button>
           </div>
         </header>
 

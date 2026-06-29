@@ -112,10 +112,10 @@ const handleTouchEnd = (event: TouchEvent) => {
 
       <div class="sidebar-footer">
         <button type="button" @click="openComplexDicePanel">
-          复杂骰子组
+          复杂骰子工具
         </button>
         <button type="button" @click="openDicePanel">
-          简易骰子组
+          简易骰子工具
         </button>
         <button type="button" @click="importCharactersFromFile">导入角色</button>
         <el-tooltip :content="storageLocationLabel" placement="top" effect="light" popper-class="dnd-tooltip">
