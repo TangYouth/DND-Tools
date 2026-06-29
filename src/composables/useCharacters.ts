@@ -263,7 +263,6 @@ const STORAGE_KEY = 'dnd-tools.character-board.v1'
 const STORAGE_DB_NAME = 'dnd-tools.storage'
 const STORAGE_DB_STORE = 'settings'
 const STORAGE_HANDLE_KEY = 'charactersDirectoryHandle'
-const OPFS_STORAGE_LABEL = '浏览器私有存储'
 const CUSTOM_OPTION = characterCreationConfig.customOption
 const DEFAULT_CLASS_HIT_DIE_RULE: ClassHitDieRule = {
   hitDie: 'D8',
@@ -774,7 +773,17 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => {
   }
 }
 
-const loadCachedCharacters = (): Character[] => []
+const loadCachedCharacters = (): Character[] => {
+  try {
+    const cached = window.localStorage.getItem(STORAGE_KEY)
+    if (!cached?.trim()) return []
+    const parsed = JSON.parse(cached) as Character[] | Character
+    const cachedCharacters = Array.isArray(parsed) ? parsed : [parsed]
+    return cachedCharacters.filter((character): character is Character => Boolean(character && typeof character === 'object' && character.name))
+  } catch {
+    return []
+  }
+}
 
 const cloneCharacter = (character: Character): Character => JSON.parse(JSON.stringify(character)) as Character
 
@@ -866,9 +875,8 @@ const isEditing = ref(false)
 const creationStep = ref(0)
 const importInput = ref<HTMLInputElement | null>(null)
 const storageDirectoryHandle = ref<FileSystemDirectoryHandle | null>(null)
-const storageMode = ref<'directory' | 'opfs' | 'none'>('none')
-const storageLocationLabel = ref('未选择本机存储目录')
-const storageStatus = ref(canUseLocalFileStorage() ? '可点击“存储路径”选择本机角色目录' : '正在准备浏览器私有存储')
+const storageLocationLabel = ref('未选择备份目录，当前仅使用浏览器本地存储')
+const storageStatus = ref(canUseLocalFileStorage() ? '角色数据已优先保存到浏览器本地存储，可选择备份目录' : '角色数据已保存到浏览器本地存储')
 const isStorageReady = ref(false)
 const isWritingStorage = ref(false)
 const creationDraft = reactive<CharacterDraft>({
@@ -985,36 +993,40 @@ const writeCharacterFile = async (character: Character) => {
   await writable.close()
 }
 
+const writeCharactersToLocalStorage = () => {
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(characters.value))
+}
+
 const persistCharacters = async () => {
-  window.localStorage.removeItem(STORAGE_KEY)
+  try {
+    writeCharactersToLocalStorage()
+  } catch {
+    storageStatus.value = '保存到浏览器本地存储失败'
+    return
+  }
 
   if (!storageDirectoryHandle.value || isWritingStorage.value) return
 
   try {
     isWritingStorage.value = true
-    if (storageMode.value === 'directory') {
-      const canWrite = await requestFilePermission(storageDirectoryHandle.value, 'readwrite')
-      if (!canWrite) {
-        storageStatus.value = '没有本机目录写入权限'
-        return
-      }
+    const canWrite = await requestFilePermission(storageDirectoryHandle.value, 'readwrite')
+    if (!canWrite) {
+      storageStatus.value = '已保存到浏览器本地存储，但没有备份目录写入权限'
+      return
     }
 
     await Promise.all(characters.value.map((character) => writeCharacterFile(character)))
-    storageStatus.value =
-      storageMode.value === 'opfs' ? `已保存到${OPFS_STORAGE_LABEL}` : `已保存到 ${storageDirectoryHandle.value.name}`
+    storageStatus.value = `已保存到浏览器本地存储，并备份到 ${storageDirectoryHandle.value.name}`
   } catch {
-    storageStatus.value = storageMode.value === 'opfs' ? `保存到${OPFS_STORAGE_LABEL}失败` : '保存到本机目录失败'
+    storageStatus.value = '已保存到浏览器本地存储，但备份到本机目录失败'
   } finally {
     isWritingStorage.value = false
   }
 }
 
-const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle, mode: 'directory' | 'opfs') => {
-  if (mode === 'directory') {
-    const canRead = await requestFilePermission(handle, 'read')
-    if (!canRead) return false
-  }
+const readCharactersFromDirectory = async (handle: FileSystemDirectoryHandle) => {
+  const canRead = await requestFilePermission(handle, 'read')
+  if (!canRead) return null
 
   const parsedCharacters: Character[] = []
   for await (const entry of handle.values()) {
@@ -1025,47 +1037,53 @@ const loadCharactersFromDirectory = async (handle: FileSystemDirectoryHandle, mo
     parsedCharacters.push(...parseCharactersJson(text))
   }
 
-  const uniqueCharacters = Array.from(new Map(parsedCharacters.map((character) => [character.id, character])).values())
-
-  storageDirectoryHandle.value = handle
-  storageMode.value = mode
-  storageLocationLabel.value = mode === 'opfs' ? OPFS_STORAGE_LABEL : handle.name
-  storageStatus.value =
-    uniqueCharacters.length > 0
-      ? `已从 ${mode === 'opfs' ? OPFS_STORAGE_LABEL : handle.name} 读取 ${uniqueCharacters.length} 个角色`
-      : `已连接${mode === 'opfs' ? OPFS_STORAGE_LABEL : ` ${handle.name}`}，当前没有角色`
-  characters.value = uniqueCharacters
-  selectedId.value = uniqueCharacters[0]?.id ?? ''
-  return true
+  return Array.from(new Map(parsedCharacters.map((character) => [character.id, character])).values())
 }
 
-const initializeOpfsStorage = async () => {
-  if (!navigator.storage.getDirectory) {
-    storageMode.value = 'none'
-    storageStatus.value = '当前浏览器不支持本机目录或 OPFS 存储'
+const connectBackupDirectory = async (handle: FileSystemDirectoryHandle, statusPrefix: string) => {
+  const backupCharacters = await readCharactersFromDirectory(handle)
+  if (!backupCharacters) {
+    storageStatus.value = '没有备份目录读取权限，当前仅使用浏览器本地存储'
     return false
   }
 
-  const handle = await navigator.storage.getDirectory()
-  await loadCharactersFromDirectory(handle, 'opfs')
+  storageDirectoryHandle.value = handle
+  storageLocationLabel.value = handle.name
+
+  const localCharacters = characters.value
+  const localIds = new Set(localCharacters.map((character) => character.id))
+  const missingBackupCharacters = backupCharacters.filter((character) => !localIds.has(character.id))
+
+  if (localCharacters.length === 0) {
+    characters.value = backupCharacters
+    selectedId.value = backupCharacters[0]?.id ?? ''
+  } else if (missingBackupCharacters.length > 0) {
+    characters.value = [...localCharacters, ...missingBackupCharacters]
+  }
+
+  await persistCharacters()
+  storageStatus.value =
+    backupCharacters.length > 0
+      ? `${statusPrefix}，已连接备份目录 ${handle.name}，从备份合并 ${missingBackupCharacters.length} 个角色`
+      : `${statusPrefix}，已连接备份目录 ${handle.name}`
   return true
 }
 
 const initializeCharacterStorage = async () => {
   try {
-    window.localStorage.removeItem(STORAGE_KEY)
     if (canUseLocalFileStorage()) {
       const savedHandle = await readStorageSetting<FileSystemDirectoryHandle>(STORAGE_HANDLE_KEY)
       if (savedHandle) {
-        await loadCharactersFromDirectory(savedHandle, 'directory')
+        await connectBackupDirectory(savedHandle, '已优先读取浏览器本地存储')
       }
-    } else {
-      await initializeOpfsStorage()
     }
   } catch {
-    storageStatus.value = canUseLocalFileStorage() ? '读取本机存储设置失败' : `读取${OPFS_STORAGE_LABEL}失败`
+    storageStatus.value = canUseLocalFileStorage() ? '读取备份目录设置失败，当前仅使用浏览器本地存储' : '角色数据已保存到浏览器本地存储'
   } finally {
     isStorageReady.value = true
+    if (!storageDirectoryHandle.value && !characters.value.length) {
+      storageStatus.value = '角色数据已保存到浏览器本地存储'
+    }
   }
 }
 
@@ -1153,26 +1171,16 @@ const mergeImportedCharacters = (importedCharacters: Character[]) => {
 
 const chooseStorageFile = async () => {
   if (!window.showDirectoryPicker) {
-    void initializeOpfsStorage().then((ready) => {
-      if (ready) storageStatus.value = `当前浏览器使用${OPFS_STORAGE_LABEL}保存角色，可通过导出下载备份`
-    })
+    storageStatus.value = '当前浏览器不支持选择备份目录，角色数据仅保存到浏览器本地存储'
     return
   }
 
   try {
     const handle = await window.showDirectoryPicker({ mode: 'readwrite' })
-    const currentCharacters = [...characters.value]
-    const currentSelectedId = selectedId.value
     storageDirectoryHandle.value = handle
-    storageMode.value = 'directory'
     storageLocationLabel.value = handle.name
     await writeStorageSetting(STORAGE_HANDLE_KEY, handle)
-    const loaded = await loadCharactersFromDirectory(handle, 'directory')
-    if ((!loaded || characters.value.length === 0) && currentCharacters.length > 0) {
-      characters.value = currentCharacters
-      selectedId.value = currentSelectedId || currentCharacters[0]?.id || ''
-      await persistCharacters()
-    }
+    await connectBackupDirectory(handle, '已设置备份目录')
   } catch (error) {
     if (error instanceof DOMException && error.name === 'AbortError') return
     storageStatus.value = '选择本机存储目录失败'
