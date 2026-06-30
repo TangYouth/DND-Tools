@@ -30,10 +30,15 @@ const {
   selectedCharacter,
   form,
   characterCreationConfig,
+  weaponConfig,
+  weaponCategories,
   skillDefinitions,
   hpPercent,
   metricCards,
   proficiencyRows,
+  weaponProficiencyTags,
+  legacyWeaponProficiencyText,
+  weaponMasteryTags,
   syncForm,
   modifier,
   signed,
@@ -97,6 +102,13 @@ const abilityIconMap: Record<string, string> = {
 
 const getMetricIcon = (label: string) => metricIconMap[label]
 const getAbilityIcon = (key: string) => abilityIconMap[key]
+const isWeaponMastered = (weaponName: string) => form.weaponMasteries.some((entry) => entry.weapon === weaponName)
+
+const setDraftWeaponMastery = (weaponName: string, mastery: string, checked: boolean) => {
+  form.weaponMasteries = checked
+    ? [...form.weaponMasteries.filter((entry) => entry.weapon !== weaponName), { weapon: weaponName, mastery }]
+    : form.weaponMasteries.filter((entry) => entry.weapon !== weaponName)
+}
 
 const openEditSection = (section: EditSection) => {
   syncForm()
@@ -322,7 +334,7 @@ const toggleCondition = (conditionName: string) => {
         </div>
 
         <div class="metric-grid">
-          <template v-for="metric in metricCards" :key="metric.label">
+          <div v-for="metric in metricCards" :key="metric.label" class="metric-card-wrap">
             <el-tooltip
               v-if="metric.label === 'HP'"
               content="点击快速调整当前生命值、恢复和临时生命值。"
@@ -330,15 +342,17 @@ const toggleCondition = (conditionName: string) => {
               effect="light"
               popper-class="dnd-tooltip"
             >
-              <button class="metric-card interactive" :class="metric.tone" type="button" @click="toggleHpQuickEdit">
-                <span class="metric-label">
-                  <img v-if="getMetricIcon(metric.label)" :src="getMetricIcon(metric.label)" alt="" />
-                  {{ metric.label }}
-                </span>
-                <strong>{{ metric.value }}</strong>
-                <small class="metric-action-hint"></small>
-                <i :style="{ width: `${hpPercent}%` }"></i>
-              </button>
+              <template #default>
+                <button class="metric-card interactive" :class="metric.tone" type="button" @click="toggleHpQuickEdit">
+                  <span class="metric-label">
+                    <img v-if="getMetricIcon(metric.label)" :src="getMetricIcon(metric.label)" alt="" />
+                    {{ metric.label }}
+                  </span>
+                  <strong>{{ metric.value }}</strong>
+                  <small class="metric-action-hint"></small>
+                  <i :style="{ width: `${hpPercent}%` }"></i>
+                </button>
+              </template>
             </el-tooltip>
             <button
               v-else
@@ -352,7 +366,7 @@ const toggleCondition = (conditionName: string) => {
               </span>
               <strong>{{ metric.value }}</strong>
             </button>
-          </template>
+          </div>
         </div>
         <p class="metric-panel-hint">可以点击 HP 快速调整当前生命值、恢复和临时生命值。</p>
 
@@ -541,6 +555,32 @@ const toggleCondition = (conditionName: string) => {
 
     </section>
 
+    <section class="panel weapon-proficiency-panel">
+      <div class="section-title">
+        <h2>武器熟练项</h2>
+        <button class="icon-button" type="button" aria-label="编辑武器熟练项" @click="openEditSection('proficiencies')">✎</button>
+      </div>
+
+      <div v-if="weaponProficiencyTags.length > 0" class="tag-list weapon-tag-list">
+        <span v-for="tag in weaponProficiencyTags" :key="tag" class="rules-tag">{{ tag }}</span>
+      </div>
+      <p v-else-if="legacyWeaponProficiencyText" class="legacy-proficiency-text">{{ legacyWeaponProficiencyText }}</p>
+      <p v-else class="empty-state-text">未填写</p>
+    </section>
+
+    <section v-if="weaponMasteryTags.length > 0" class="panel weapon-proficiency-panel">
+      <div class="section-title">
+        <h2>武器精通</h2>
+        <button class="icon-button" type="button" aria-label="编辑武器精通" @click="openEditSection('proficiencies')">✎</button>
+      </div>
+
+      <div class="tag-list weapon-tag-list">
+        <span v-for="entry in weaponMasteryTags" :key="entry.weapon" class="rules-tag weapon-mastery-tag">
+          {{ entry.weapon }} · {{ entry.mastery }}
+        </span>
+      </div>
+    </section>
+
     <Teleport to="body">
       <div v-if="activeEditSection" class="edit-dialog-backdrop">
         <section class="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title">
@@ -722,10 +762,6 @@ const toggleCondition = (conditionName: string) => {
               <template v-else-if="activeEditSection === 'proficiencies'">
               <div class="proficiency-edit-grid">
                 <label>
-                  武器熟练项
-                  <el-input v-model="form.proficiencies.weapons" type="textarea" :rows="3" />
-                </label>
-                <label>
                   护甲熟练项
                   <el-input v-model="form.proficiencies.armor" type="textarea" :rows="3" />
                 </label>
@@ -740,6 +776,50 @@ const toggleCondition = (conditionName: string) => {
                 <label>
                   其他熟练项
                   <el-input v-model="form.proficiencies.other" type="textarea" :rows="3" />
+                </label>
+              </div>
+              <div class="weapon-edit-panel">
+                <section>
+                  <h3>武器熟练项</h3>
+                  <el-checkbox-group v-model="form.weaponProficiencies.categories" class="weapon-category-editor">
+                    <el-checkbox v-for="category in weaponCategories" :key="category" :value="category">
+                      {{ category }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                  <div class="weapon-config-grid">
+                    <article v-for="(weapons, category) in weaponConfig" :key="category" class="weapon-config-group">
+                      <h4>{{ category }}</h4>
+                      <el-checkbox-group v-model="form.weaponProficiencies.weapons" class="weapon-checkbox-list">
+                        <el-checkbox v-for="weapon in weapons" :key="weapon.name" :value="weapon.name">
+                          {{ weapon.name }}
+                        </el-checkbox>
+                      </el-checkbox-group>
+                    </article>
+                  </div>
+                </section>
+
+                <section>
+                  <h3>武器精通</h3>
+                  <div class="weapon-config-grid">
+                    <article v-for="(weapons, category) in weaponConfig" :key="`${category}-mastery`" class="weapon-config-group">
+                      <h4>{{ category }}</h4>
+                      <div class="weapon-checkbox-list">
+                        <el-checkbox
+                          v-for="weapon in weapons"
+                          :key="`${weapon.name}-mastery`"
+                          :model-value="isWeaponMastered(weapon.name)"
+                          @change="setDraftWeaponMastery(weapon.name, weapon.mastery_entries, Boolean($event))"
+                        >
+                          {{ weapon.name }} · {{ weapon.mastery_entries }}
+                        </el-checkbox>
+                      </div>
+                    </article>
+                  </div>
+                </section>
+
+                <label v-if="form.proficiencies.weapons" class="wide-field">
+                  旧版武器熟练项文本
+                  <el-input v-model="form.proficiencies.weapons" type="textarea" :rows="2" />
                 </label>
               </div>
               </template>

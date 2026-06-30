@@ -1,0 +1,343 @@
+{
+  "简易近战武器": [
+    {
+      "name": "短棒",
+      "property": [
+        "轻型"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d4钝击"
+    },
+    {
+      "name": "匕首",
+      "property": [
+        "灵巧",
+        "轻型",
+        "投掷(20/60)"
+      ],
+      "mastery_entries": "迅切",
+      "harm": "1d4穿刺"
+    },
+    {
+      "name": "巨棒",
+      "property": [
+        "双手"
+      ],
+      "mastery_entries": "推离",
+      "harm": "1d8钝击"
+    },
+    {
+      "name": "手斧",
+      "property": [
+        "轻型",
+        "投掷(20/60)"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d6挥砍"
+    },
+    {
+      "name": "标枪",
+      "property": [
+        "投掷(30/120)"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d6穿刺"
+    },
+    {
+      "name": "轻锤",
+      "property": [
+        "轻型",
+        "投掷(20/60)"
+      ],
+      "mastery_entries": "迅切",
+      "harm": "1d4钝击"
+    },
+    {
+      "name": "硬头锤",
+      "property": [],
+      "mastery_entries": "削弱",
+      "harm": "1d6钝击"
+    },
+    {
+      "name": "长棍",
+      "property": [
+        "两用(1d8)"
+      ],
+      "mastery_entries": "失衡",
+      "harm": "1d6钝击"
+    },
+    {
+      "name": "镰刀",
+      "property": [
+        "轻型"
+      ],
+      "mastery_entries": "迅切",
+      "harm": "1d4挥砍"
+    },
+    {
+      "name": "短矛",
+      "property": [
+        "投掷(20/60)",
+        "两用(1d8)"
+      ],
+      "mastery_entries": "削弱",
+      "harm": "1d6穿刺"
+    }
+  ],
+  "简易远程武器": [
+    {
+      "name": "飞镖",
+      "property": [
+        "灵巧",
+        "投掷(20/60)"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d4穿刺"
+    },
+    {
+      "name": "轻弩",
+      "property": [
+        "弹药(80/320；弩矢)",
+        "装填",
+        "双手"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "短弓",
+      "property": [
+        "弹药(80/320；箭矢)",
+        "双手"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d6穿刺"
+    },
+    {
+      "name": "投石索",
+      "property": [
+        "弹药(30/120；弹丸)"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d4钝击"
+    }
+  ],
+  "军用近战武器": [
+    {
+      "name": "战斧",
+      "property": [
+        "两用(1d10)"
+      ],
+      "mastery_entries": "失衡",
+      "harm": "1d8挥砍"
+    },
+    {
+      "name": "连枷",
+      "property": [],
+      "mastery_entries": "削弱",
+      "harm": "1d8钝击"
+    },
+    {
+      "name": "长柄刀",
+      "property": [
+        "重型",
+        "触及",
+        "双手"
+      ],
+      "mastery_entries": "划伤",
+      "harm": "1d10挥砍"
+    },
+    {
+      "name": "巨斧",
+      "property": [
+        "重型",
+        "双手"
+      ],
+      "mastery_entries": "顺劈",
+      "harm": "1d12挥砍"
+    },
+    {
+      "name": "巨剑",
+      "property": [
+        "重型",
+        "双手"
+      ],
+      "mastery_entries": "划伤",
+      "harm": "2d6挥砍"
+    },
+    {
+      "name": "长戟",
+      "property": [
+        "重型",
+        "触及",
+        "双手"
+      ],
+      "mastery_entries": "顺劈",
+      "harm": "1d10挥砍"
+    },
+    {
+      "name": "骑枪",
+      "property": [
+        "重型",
+        "触及",
+        "双手(骑乘时可单手)"
+      ],
+      "mastery_entries": "失衡",
+      "harm": "1d10穿刺"
+    },
+    {
+      "name": "长剑",
+      "property": [
+        "两用(1d10)"
+      ],
+      "mastery_entries": "削弱",
+      "harm": "1d8挥砍"
+    },
+    {
+      "name": "巨锤",
+      "property": [
+        "重型",
+        "双手"
+      ],
+      "mastery_entries": "失衡",
+      "harm": "2d6钝击"
+    },
+    {
+      "name": "钉头锤",
+      "property": [],
+      "mastery_entries": "削弱",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "长矛",
+      "property": [
+        "重型",
+        "触及",
+        "双手"
+      ],
+      "mastery_entries": "推离",
+      "harm": "1d10穿刺"
+    },
+    {
+      "name": "刺剑",
+      "property": [
+        "灵巧"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "弯刀",
+      "property": [
+        "灵巧",
+        "轻型"
+      ],
+      "mastery_entries": "迅切",
+      "harm": "1d6挥砍"
+    },
+    {
+      "name": "短剑",
+      "property": [
+        "灵巧",
+        "轻型"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d6穿刺"
+    },
+    {
+      "name": "三叉戟",
+      "property": [
+        "投掷(20/60)",
+        "两用(1d10)"
+      ],
+      "mastery_entries": "失衡",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "战锤",
+      "property": [
+        "两用(1d10)"
+      ],
+      "mastery_entries": "推离",
+      "harm": "1d8钝击"
+    },
+    {
+      "name": "战镐",
+      "property": [
+        "两用(1d10)"
+      ],
+      "mastery_entries": "削弱",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "鞭",
+      "property": [
+        "灵巧",
+        "触及"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d4挥砍"
+    }
+  ],
+  "军用远程武器": [
+    {
+      "name": "吹箭筒",
+      "property": [
+        "弹药(25/100；针)",
+        "装填"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1穿刺"
+    },
+    {
+      "name": "手弩",
+      "property": [
+        "弹药(30/120；弩矢)",
+        "轻型",
+        "装填"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d6穿刺"
+    },
+    {
+      "name": "重弩",
+      "property": [
+        "弹药(100/400；弩矢)",
+        "重型",
+        "装填",
+        "双手"
+      ],
+      "mastery_entries": "推离",
+      "harm": "1d10穿刺"
+    },
+    {
+      "name": "长弓",
+      "property": [
+        "弹药(150/600；箭矢)",
+        "重型",
+        "双手"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d8穿刺"
+    },
+    {
+      "name": "长管火枪",
+      "property": [
+        "弹药(40/120；子弹)",
+        "装填",
+        "双手"
+      ],
+      "mastery_entries": "缓速",
+      "harm": "1d12穿刺"
+    },
+    {
+      "name": "手枪",
+      "property": [
+        "弹药(30/90；子弹)",
+        "装填"
+      ],
+      "mastery_entries": "侵扰",
+      "harm": "1d10穿刺"
+    }
+  ]
+}

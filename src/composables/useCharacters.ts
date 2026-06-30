@@ -1,6 +1,7 @@
 import { computed, reactive, ref, watch } from 'vue'
 import characterCreationConfig from '../config/characterCreation.json'
 import speciesTraitsConfig from '../config/species.json'
+import weaponConfig from '../config/weaponConfig.json'
 
 declare global {
   interface Window {
@@ -88,6 +89,13 @@ interface SpeciesTraitConfigEntry {
   description: string
 }
 
+interface WeaponConfigEntry {
+  name: string
+  property: string
+  mastery_entries: string
+  harm: string
+}
+
 interface SpellSlot {
   current: number
   max: number
@@ -169,6 +177,16 @@ interface CharacterCreatureEntry {
   description: string
 }
 
+interface WeaponProficiencies {
+  categories: string[]
+  weapons: string[]
+}
+
+interface WeaponMastery {
+  weapon: string
+  mastery: string
+}
+
 interface Character {
   id: string
   name: string
@@ -215,6 +233,8 @@ interface Character {
     languages: string
     other: string
   }
+  weaponProficiencies: WeaponProficiencies
+  weaponMasteries: WeaponMastery[]
   notes: string
   updatedAt: string
 }
@@ -404,6 +424,10 @@ const createTraitEntry = (title = '', source = '', description = '', prerequisit
 
 const speciesTraits = speciesTraitsConfig as Record<string, SpeciesTraitConfigEntry[]>
 const speciesOptions = Object.keys(speciesTraits)
+const weaponCategories = Object.keys(weaponConfig as Record<string, WeaponConfigEntry[]>)
+const weaponOptions = Object.values(weaponConfig as Record<string, WeaponConfigEntry[]>).flat()
+const weaponNames = weaponOptions.map((weapon) => weapon.name)
+const weaponMasteryByName = new Map(weaponOptions.map((weapon) => [weapon.name, weapon.mastery_entries]))
 
 const createSpeciesTraitEntries = (species: string): CharacterTraitEntry[] => {
   const source = `${species}特质`
@@ -647,6 +671,41 @@ const normalizeSpellSlots = (slots: Record<string, SpellSlot> | undefined) => {
   return normalizedSlots
 }
 
+const normalizeStringList = (entries: string[] | undefined) => {
+  if (!Array.isArray(entries)) return []
+  return Array.from(new Set(entries.map((entry) => String(entry).trim()).filter(Boolean)))
+}
+
+const normalizeWeaponProficiencies = (
+  proficiencies: WeaponProficiencies | undefined,
+  categoryOptions: string[] = [],
+  weaponOptions: string[] = [],
+) => {
+  const categorySet = new Set(categoryOptions)
+  const weaponSet = new Set(weaponOptions)
+
+  return {
+    categories: normalizeStringList(proficiencies?.categories).filter((entry) => categorySet.size === 0 || categorySet.has(entry)),
+    weapons: normalizeStringList(proficiencies?.weapons).filter((entry) => weaponSet.size === 0 || weaponSet.has(entry)),
+  }
+}
+
+const normalizeWeaponMasteries = (masteries: WeaponMastery[] | undefined, weaponOptions: string[] = []) => {
+  if (!Array.isArray(masteries)) return []
+  const weaponSet = new Set(weaponOptions)
+  const keyedMasteries = new Map<string, WeaponMastery>()
+
+  masteries.forEach((entry) => {
+    const weapon = entry.weapon?.trim()
+    const mastery = entry.mastery?.trim()
+    if (!weapon || !mastery) return
+    if (weaponSet.size > 0 && !weaponSet.has(weapon)) return
+    keyedMasteries.set(weapon, { weapon, mastery })
+  })
+
+  return Array.from(keyedMasteries.values())
+}
+
 const createDefaultSkillSelection = () => {
   return skillDefinitions.reduce(
     (selection, skill) => {
@@ -769,6 +828,11 @@ const createCharacter = (overrides: Partial<Character> = {}): Character => {
       languages: '',
       other: '',
     },
+    weaponProficiencies: {
+      categories: [],
+      weapons: [],
+    },
+    weaponMasteries: [],
     notes: '',
     updatedAt: new Date().toISOString(),
     ...overrides,
@@ -864,6 +928,8 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
       languages: character.proficiencies?.languages ?? '',
       other: character.proficiencies?.other ?? '',
     },
+    weaponProficiencies: normalizeWeaponProficiencies(character.weaponProficiencies, weaponCategories, weaponNames),
+    weaponMasteries: normalizeWeaponMasteries(character.weaponMasteries, weaponNames),
     updatedAt: character.updatedAt || new Date().toISOString(),
   }
 
@@ -871,7 +937,7 @@ const normalizeCharacter = (character: Partial<Character>): Character => {
   return normalized as Character
 }
 
-const characters = ref<Character[]>(loadCachedCharacters())
+const characters = ref<Character[]>(loadCachedCharacters().map((character) => normalizeCharacter(character)))
 const selectedId = ref(characters.value[0]?.id ?? '')
 const isEditing = ref(false)
 const creationStep = ref(0)
@@ -1285,12 +1351,34 @@ const metricCards = computed(() => [
 ])
 
 const proficiencyRows = computed(() => [
-  ['武器熟练项', selectedCharacter.value?.proficiencies.weapons ?? ''],
   ['护甲熟练项', selectedCharacter.value?.proficiencies.armor ?? ''],
   ['工具熟练项', selectedCharacter.value?.proficiencies.tools ?? ''],
   ['语言', selectedCharacter.value?.proficiencies.languages ?? ''],
   ['其他熟练项', selectedCharacter.value?.proficiencies.other ?? ''],
 ])
+
+const weaponProficiencyTags = computed(() => {
+  const character = selectedCharacter.value
+  if (!character) return []
+  const weaponProficiencies = normalizeWeaponProficiencies(character.weaponProficiencies, weaponCategories, weaponNames)
+  const categorySet = new Set(weaponProficiencies.categories)
+  const categoryWeaponNames = new Set(
+    Object.entries(weaponConfig as Record<string, WeaponConfigEntry[]>)
+      .filter(([category]) => categorySet.has(category))
+      .flatMap(([, weapons]) => weapons.map((weapon) => weapon.name)),
+  )
+  const individualWeapons = weaponProficiencies.weapons.filter((weapon) => !categoryWeaponNames.has(weapon))
+  return [...weaponProficiencies.categories, ...individualWeapons]
+})
+
+const legacyWeaponProficiencyText = computed(() => selectedCharacter.value?.proficiencies.weapons?.trim() ?? '')
+
+const weaponMasteryTags = computed(() => {
+  return (selectedCharacter.value?.weaponMasteries ?? []).map((entry) => ({
+    weapon: entry.weapon,
+    mastery: entry.mastery || weaponMasteryByName.get(entry.weapon) || '',
+  }))
+})
 
 const currentCreationStep = computed(() => characterCreationConfig.steps[creationStep.value])
 const storyLength = computed(() => creationDraft.story.length)
@@ -1603,6 +1691,9 @@ export const useCharacters = () => ({
   abilityDefinitions,
   skillDefinitions,
   characterCreationConfig,
+  weaponConfig: weaponConfig as Record<string, WeaponConfigEntry[]>,
+  weaponCategories,
+  weaponOptions,
   speciesOptions,
   characters,
   selectedId,
@@ -1618,6 +1709,9 @@ export const useCharacters = () => ({
   hpPercent,
   metricCards,
   proficiencyRows,
+  weaponProficiencyTags,
+  legacyWeaponProficiencyText,
+  weaponMasteryTags,
   currentCreationStep,
   storyLength,
   previewRows,

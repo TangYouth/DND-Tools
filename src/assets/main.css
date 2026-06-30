@@ -1169,11 +1169,13 @@ h1 {
   gap: 14px;
 }
 
+.metric-card-wrap,
 .metric-grid > .el-tooltip__trigger {
   display: grid;
   min-width: 0;
 }
 
+.metric-card-wrap > .el-tooltip__trigger,
 .metric-grid > .el-tooltip__trigger .metric-card {
   width: 100%;
   height: 100%;
@@ -1421,6 +1423,26 @@ h1 {
 .proficiency-grid h3 {
   margin-bottom: 9px;
   font-size: 17px;
+}
+
+.weapon-proficiency-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.weapon-tag-list {
+  gap: 12px;
+}
+
+.legacy-proficiency-text {
+  margin: 0;
+  color: var(--muted);
+  font-weight: 700;
+  line-height: 1.7;
+}
+
+.weapon-mastery-tag {
+  color: #79542d;
 }
 
 .resistance-board,
@@ -4640,6 +4662,64 @@ select {
   gap: 12px;
 }
 
+.weapon-edit-panel {
+  display: grid;
+  gap: 18px;
+  padding-top: 4px;
+}
+
+.weapon-edit-panel section {
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid rgba(216, 201, 181, 0.82);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.32);
+}
+
+.weapon-edit-panel h3,
+.weapon-config-group h4 {
+  margin: 0;
+  color: var(--ink);
+}
+
+.weapon-edit-panel h3 {
+  font-size: 17px;
+}
+
+.weapon-config-group h4 {
+  font-size: 15px;
+}
+
+.weapon-category-editor,
+.weapon-checkbox-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.weapon-category-editor .el-checkbox,
+.weapon-checkbox-list .el-checkbox {
+  margin-right: 0;
+}
+
+.weapon-config-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 12px;
+}
+
+.weapon-config-group {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid rgba(216, 201, 181, 0.62);
+  border-radius: 8px;
+  background: rgba(255, 250, 241, 0.54);
+}
+
 .ability-compact-editor {
   display: grid;
   grid-template-columns: repeat(3, minmax(260px, 1fr));
@@ -4993,6 +5073,7 @@ textarea {
   .ability-compact-editor,
   .class-editor header,
   .class-edit-row,
+  .weapon-config-grid,
   .hp-dialog-actions,
   .damage-resistance-editor,
   .proficiency-edit-grid {
