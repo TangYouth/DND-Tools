@@ -32,6 +32,9 @@ const {
   characterCreationConfig,
   weaponConfig,
   weaponCategories,
+  weaponOptions,
+  weaponPropertyEntries,
+  weaponMasteryEntries,
   skillDefinitions,
   hpPercent,
   metricCards,
@@ -59,6 +62,7 @@ const hpTemporaryAmount = ref(0)
 const alignmentOptions = computed(() => characterCreationConfig.alignments.flat())
 const classSummary = computed(() => getCharacterClassSummary(selectedCharacter.value))
 const draftTotalLevel = computed(() => getClassTotalLevel(form.classes))
+const armorProficiencyOptions = ['轻甲', '中甲', '重甲', '盾牌']
 const damageResistanceOptions = ['酸蚀', '火焰', '寒冷', '闪电', '雷鸣', '毒素', '黯蚀', '光耀', '心灵', '力场', '挥砍', '穿刺', '钝击']
 const conditionOptions = computed<ConditionOption[]>(() => [
   {
@@ -103,6 +107,24 @@ const abilityIconMap: Record<string, string> = {
 const getMetricIcon = (label: string) => metricIconMap[label]
 const getAbilityIcon = (key: string) => abilityIconMap[key]
 const isWeaponMastered = (weaponName: string) => form.weaponMasteries.some((entry) => entry.weapon === weaponName)
+const weaponByName = computed(() => new Map(weaponOptions.map((weapon) => [weapon.name, weapon])))
+
+const getWeaponDetail = (weaponName: string) => weaponByName.value.get(weaponName)
+const getWeaponPropertyDescription = (property: string) => weaponPropertyEntries[property]?.description ?? ''
+const getWeaponMasteryDescription = (mastery: string) => weaponMasteryEntries[mastery]?.description ?? ''
+const draftArmorProficiencies = computed({
+  get: () => {
+    const entries = form.proficiencies.armor
+      .split(/[、，,\s]+/)
+      .map((entry) => entry.trim())
+      .filter(Boolean)
+
+    return armorProficiencyOptions.filter((option) => entries.includes(option))
+  },
+  set: (entries: string[]) => {
+    form.proficiencies.armor = entries.join('、')
+  },
+})
 
 const setDraftWeaponMastery = (weaponName: string, mastery: string, checked: boolean) => {
   form.weaponMasteries = checked
@@ -471,30 +493,6 @@ const toggleCondition = (conditionName: string) => {
 
     </section>
 
-    <section class="panel resistance-panel">
-      <div class="section-title">
-        <h2>抗性与豁免</h2>
-        <button class="icon-button" type="button" aria-label="编辑抗性与豁免" @click="openEditSection('resistances')">✎</button>
-      </div>
-
-      <div class="resistance-board">
-        <div>
-          <h3>伤害抗性</h3>
-          <div v-if="selectedCharacter.damageResistances.length > 0" class="tag-list">
-            <span v-for="resistance in selectedCharacter.damageResistances" :key="resistance" class="rules-tag resistance-tag">
-              {{ resistance }}抗性
-            </span>
-          </div>
-          <p v-else class="empty-state-text">未记录伤害抗性</p>
-        </div>
-
-        <div>
-          <h3>特殊豁免（优势 / 抗性）</h3>
-          <p class="special-save-text">{{ selectedCharacter.specialSaves || '未填写' }}</p>
-        </div>
-      </div>
-    </section>
-
     <section class="panel condition-panel">
       <div class="section-title">
         <h2>状态</h2>
@@ -540,6 +538,93 @@ const toggleCondition = (conditionName: string) => {
       </div>
     </section>
 
+    <section class="panel resistance-panel">
+      <div class="section-title">
+        <h2>抗性与豁免</h2>
+        <button class="icon-button" type="button" aria-label="编辑抗性与豁免" @click="openEditSection('resistances')">✎</button>
+      </div>
+
+      <div class="resistance-board">
+        <div>
+          <h3>伤害抗性</h3>
+          <div v-if="selectedCharacter.damageResistances.length > 0" class="tag-list">
+            <span v-for="resistance in selectedCharacter.damageResistances" :key="resistance" class="rules-tag resistance-tag">
+              {{ resistance }}抗性
+            </span>
+          </div>
+          <p v-else class="empty-state-text">未记录伤害抗性</p>
+        </div>
+
+        <div>
+          <h3>特殊豁免（优势 / 抗性）</h3>
+          <p class="special-save-text">{{ selectedCharacter.specialSaves || '未填写' }}</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel weapon-proficiency-panel">
+      <div class="section-title">
+        <h2>武器熟练项</h2>
+        <button class="icon-button" type="button" aria-label="编辑武器熟练项" @click="openEditSection('proficiencies')">✎</button>
+      </div>
+
+      <div v-if="weaponProficiencyTags.length > 0" class="tag-list weapon-tag-list">
+        <template v-for="tag in weaponProficiencyTags" :key="tag">
+          <el-tooltip
+            v-if="getWeaponDetail(tag)"
+            placement="top"
+            effect="light"
+            popper-class="dnd-tooltip dnd-tooltip-rich weapon-tooltip"
+          >
+            <template #content>
+              <div class="weapon-tooltip-content">
+                <strong>{{ tag }} · {{ getWeaponDetail(tag)?.harm }}</strong>
+                <div v-if="getWeaponDetail(tag)?.property.length" class="weapon-tooltip-rule-list">
+                  <div v-for="property in getWeaponDetail(tag)?.property" :key="property">
+                    <b>{{ property }}</b>
+                    <span>{{ getWeaponPropertyDescription(property) }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <span class="rules-tag weapon-detail-tag">{{ tag }}</span>
+          </el-tooltip>
+          <span v-else class="rules-tag">{{ tag }}</span>
+        </template>
+      </div>
+      <p v-else-if="legacyWeaponProficiencyText" class="legacy-proficiency-text">{{ legacyWeaponProficiencyText }}</p>
+      <p v-else class="empty-state-text">未填写</p>
+    </section>
+
+    <section v-if="weaponMasteryTags.length > 0" class="panel weapon-proficiency-panel">
+      <div class="section-title">
+        <h2>武器精通</h2>
+        <button class="icon-button" type="button" aria-label="编辑武器精通" @click="openEditSection('proficiencies')">✎</button>
+      </div>
+
+      <div class="tag-list weapon-tag-list">
+        <el-tooltip
+          v-for="entry in weaponMasteryTags"
+          :key="entry.weapon"
+          placement="top"
+          effect="light"
+          popper-class="dnd-tooltip dnd-tooltip-rich weapon-tooltip"
+        >
+          <template #content>
+            <div class="weapon-tooltip-content">
+              <div v-if="entry.mastery" class="weapon-tooltip-mastery">
+                <b>{{ entry.mastery }}</b>
+                <span>{{ getWeaponMasteryDescription(entry.mastery) }}</span>
+              </div>
+            </div>
+          </template>
+          <span class="rules-tag weapon-mastery-tag weapon-detail-tag">
+            {{ entry.weapon }} · {{ entry.mastery }}
+          </span>
+        </el-tooltip>
+      </div>
+    </section>
+
     <section class="panel proficiency-panel">
       <div class="section-title">
         <h2>熟练项</h2>
@@ -553,32 +638,6 @@ const toggleCondition = (conditionName: string) => {
         </div>
       </div>
 
-    </section>
-
-    <section class="panel weapon-proficiency-panel">
-      <div class="section-title">
-        <h2>武器熟练项</h2>
-        <button class="icon-button" type="button" aria-label="编辑武器熟练项" @click="openEditSection('proficiencies')">✎</button>
-      </div>
-
-      <div v-if="weaponProficiencyTags.length > 0" class="tag-list weapon-tag-list">
-        <span v-for="tag in weaponProficiencyTags" :key="tag" class="rules-tag">{{ tag }}</span>
-      </div>
-      <p v-else-if="legacyWeaponProficiencyText" class="legacy-proficiency-text">{{ legacyWeaponProficiencyText }}</p>
-      <p v-else class="empty-state-text">未填写</p>
-    </section>
-
-    <section v-if="weaponMasteryTags.length > 0" class="panel weapon-proficiency-panel">
-      <div class="section-title">
-        <h2>武器精通</h2>
-        <button class="icon-button" type="button" aria-label="编辑武器精通" @click="openEditSection('proficiencies')">✎</button>
-      </div>
-
-      <div class="tag-list weapon-tag-list">
-        <span v-for="entry in weaponMasteryTags" :key="entry.weapon" class="rules-tag weapon-mastery-tag">
-          {{ entry.weapon }} · {{ entry.mastery }}
-        </span>
-      </div>
     </section>
 
     <Teleport to="body">
@@ -761,11 +820,15 @@ const toggleCondition = (conditionName: string) => {
 
               <template v-else-if="activeEditSection === 'proficiencies'">
               <div class="proficiency-edit-grid">
-                <label>
+                <div class="proficiency-checkbox-field">
                   护甲熟练项
-                  <el-input v-model="form.proficiencies.armor" type="textarea" :rows="3" />
-                </label>
-                <label>
+                  <el-checkbox-group v-model="draftArmorProficiencies" class="armor-proficiency-editor">
+                    <el-checkbox v-for="armor in armorProficiencyOptions" :key="armor" :value="armor">
+                      {{ armor }}
+                    </el-checkbox>
+                  </el-checkbox-group>
+                </div>
+                <label class="tools-proficiency-field">
                   工具熟练项
                   <el-input v-model="form.proficiencies.tools" type="textarea" :rows="3" />
                 </label>

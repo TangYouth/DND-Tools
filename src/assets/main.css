@@ -1445,6 +1445,41 @@ h1 {
   color: #79542d;
 }
 
+.weapon-detail-tag {
+  cursor: pointer;
+}
+
+.weapon-tooltip-content {
+  display: grid;
+  gap: 10px;
+  max-width: 520px;
+}
+
+.weapon-tooltip-content strong {
+  color: #3b2a18;
+  font-size: 16px;
+}
+
+.weapon-tooltip-rule-list,
+.weapon-tooltip-mastery {
+  display: grid;
+  gap: 8px;
+}
+
+.weapon-tooltip-rule-list div,
+.weapon-tooltip-mastery {
+  display: grid;
+  gap: 3px;
+}
+
+.weapon-tooltip-content b {
+  color: #79542d;
+}
+
+.weapon-tooltip-content span {
+  color: #3d3329;
+}
+
 .resistance-board,
 .condition-board {
   display: grid;
@@ -4660,6 +4695,28 @@ select {
   display: grid;
   grid-template-columns: repeat(3, minmax(200px, 1fr));
   gap: 12px;
+}
+
+.proficiency-checkbox-field {
+  display: grid;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.tools-proficiency-field {
+  grid-column: 1;
+}
+
+.armor-proficiency-editor {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+}
+
+.armor-proficiency-editor .el-checkbox {
+  margin-right: 0;
 }
 
 .weapon-edit-panel {

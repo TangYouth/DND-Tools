@@ -91,9 +91,20 @@ interface SpeciesTraitConfigEntry {
 
 interface WeaponConfigEntry {
   name: string
-  property: string
+  property: string[]
   mastery_entries: string
   harm: string
+}
+
+interface WeaponRuleEntry {
+  name: string
+  description: string
+}
+
+interface WeaponConfigData {
+  property_entries?: Record<string, WeaponRuleEntry>
+  mastery_entries?: Record<string, WeaponRuleEntry>
+  [category: string]: WeaponConfigEntry[] | Record<string, WeaponRuleEntry> | undefined
 }
 
 interface SpellSlot {
@@ -424,8 +435,14 @@ const createTraitEntry = (title = '', source = '', description = '', prerequisit
 
 const speciesTraits = speciesTraitsConfig as Record<string, SpeciesTraitConfigEntry[]>
 const speciesOptions = Object.keys(speciesTraits)
-const weaponCategories = Object.keys(weaponConfig as Record<string, WeaponConfigEntry[]>)
-const weaponOptions = Object.values(weaponConfig as Record<string, WeaponConfigEntry[]>).flat()
+const weaponConfigData = weaponConfig as WeaponConfigData
+const weaponGroups = Object.fromEntries(
+  Object.entries(weaponConfigData).filter(([, value]) => Array.isArray(value)),
+) as Record<string, WeaponConfigEntry[]>
+const weaponPropertyEntries = weaponConfigData.property_entries ?? {}
+const weaponMasteryEntries = weaponConfigData.mastery_entries ?? {}
+const weaponCategories = Object.keys(weaponGroups)
+const weaponOptions = Object.values(weaponGroups).flat()
 const weaponNames = weaponOptions.map((weapon) => weapon.name)
 const weaponMasteryByName = new Map(weaponOptions.map((weapon) => [weapon.name, weapon.mastery_entries]))
 
@@ -1361,14 +1378,7 @@ const weaponProficiencyTags = computed(() => {
   const character = selectedCharacter.value
   if (!character) return []
   const weaponProficiencies = normalizeWeaponProficiencies(character.weaponProficiencies, weaponCategories, weaponNames)
-  const categorySet = new Set(weaponProficiencies.categories)
-  const categoryWeaponNames = new Set(
-    Object.entries(weaponConfig as Record<string, WeaponConfigEntry[]>)
-      .filter(([category]) => categorySet.has(category))
-      .flatMap(([, weapons]) => weapons.map((weapon) => weapon.name)),
-  )
-  const individualWeapons = weaponProficiencies.weapons.filter((weapon) => !categoryWeaponNames.has(weapon))
-  return [...weaponProficiencies.categories, ...individualWeapons]
+  return [...weaponProficiencies.categories, ...weaponProficiencies.weapons]
 })
 
 const legacyWeaponProficiencyText = computed(() => selectedCharacter.value?.proficiencies.weapons?.trim() ?? '')
@@ -1691,7 +1701,9 @@ export const useCharacters = () => ({
   abilityDefinitions,
   skillDefinitions,
   characterCreationConfig,
-  weaponConfig: weaponConfig as Record<string, WeaponConfigEntry[]>,
+  weaponConfig: weaponGroups,
+  weaponPropertyEntries,
+  weaponMasteryEntries,
   weaponCategories,
   weaponOptions,
   speciesOptions,
